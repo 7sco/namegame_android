@@ -12,9 +12,11 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 import android.view.animation.OvershootInterpolator;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 import com.willowtreeapps.namegame.R;
@@ -47,7 +49,13 @@ public class NameGameFragment extends Fragment implements OnClickListener{
 
     private TextView title;
     private ViewGroup container;
+    private Button playAgainButton;
     private List<ImageView> faces = new ArrayList<>(5);
+
+    ProfilesRepository.Listener listener;
+
+    private Person2 randomPerson;
+    private List<Person2> randomList;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -66,25 +74,46 @@ public class NameGameFragment extends Fragment implements OnClickListener{
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         title = (TextView) view.findViewById(R.id.title);
         container = (ViewGroup) view.findViewById(R.id.face_container);
+        playAgainButton = (Button) view.findViewById(R.id.playAgain);
+
+        playAgainButton.setVisibility(View.GONE);
+
+        getData();
 
 
 
-        profilesRepository.register(new ProfilesRepository.Listener() {
 
+    }
+
+    private void getData() {
+
+
+        listener= new ProfilesRepository.Listener() {
             @Override
             public void onLoadFinished(@NonNull List<Person2> people) {
                 Log.d("TEST", "onLoadFinished: ");
+                //Gets List and Randomizes list, get only 5 elements
 
-                setImages(faces ,people);
-
+                randomList=listRandomizer.pickN(people, 6);
+                randomPerson= listRandomizer.pickOne(randomList);
+                title.setText(randomPerson.getFirstName());
+                setImages(faces ,randomList);
             }
 
             @Override
             public void onError(@NonNull Throwable error) {
                 Log.d("TEST", "onError: "+error.getMessage());
-            }
-        });
 
+            }
+        };
+
+
+        profilesRepository.register(listener);
+        hideViews();
+        //animateFacesOut();
+    }
+
+    private void hideViews() {
         //Hide the views until data loads
         title.setAlpha(0);
 
@@ -98,29 +127,7 @@ public class NameGameFragment extends Fragment implements OnClickListener{
             face.setScaleX(0);
             face.setScaleY(0);
         }
-
-        container.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                Log.d("Test=", "onTouch: "+v.getId()+" - "+event.toString());
-                return false;
-            }
-        });
-
-//        container.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                onPersonSelected(v,faces.get(container.tou));
-//            }
-//        });
-
-        //Log.d("Test=", "onViewCreated: "+container.ge);
-
-
-
-
     }
-
 
 
     /**
@@ -133,10 +140,12 @@ public class NameGameFragment extends Fragment implements OnClickListener{
 
         for (int i = 0; i < n; i++) {
             ImageView face = faces.get(i);
-
-            String url= people.get(i).getHeadshot().getUrl();
-            url="http://"+url.substring(2,url.length());
-            Log.d("Test", "setImages:"+url);
+            String url="";
+            if(people.get(i).getHeadshot().getUrl()!=null){
+                url= people.get(i).getHeadshot().getUrl();
+                Log.d("Test", "setImages:"+url);
+                url="http://"+url.substring(2,url.length());
+            }
             picasso.get().load(url)
                     .placeholder(R.drawable.ic_face_white_48dp)
                     .resize(imageSize, imageSize)
@@ -144,6 +153,8 @@ public class NameGameFragment extends Fragment implements OnClickListener{
                     .into(face);
         }
         animateFacesIn();
+
+
     }
 
 
@@ -158,24 +169,76 @@ public class NameGameFragment extends Fragment implements OnClickListener{
         }
     }
 
+
+    /**
+     * A method to animate the faces into view
+     */
+    private void animateFacesOut() {
+        title.animate().alpha(0).start();
+
+
+        for (int i = faces.size()-1; i >= 0; i--) {
+            ImageView face = faces.get(i);
+            face.animate().scaleX(0).scaleY(0).setStartDelay(800 + 120 * i).setInterpolator(OVERSHOOT).start();
+        }
+
+
+        playAgainButton.setVisibility(View.VISIBLE);
+        playAgainButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               // profilesRepository.register(listener);
+                profilesRepository.load();
+            }
+        });
+    }
+
     /**
      * A method to handle when a person is selected
      *
      * @param view   The view that was selected
      * @param person The person that was selected
      */
-    private void onPersonSelected(@NonNull View view, @NonNull Person person) {
+    private void onPersonSelected(@NonNull View view, @NonNull Person2 person) {
         //TODO evaluate whether it was the right person and make an action based on that
         Log.d("TEST", "onPersonSelected: "+person.getFirstName());
+
+        if (person==randomPerson){
+            Toast.makeText(getContext(), "WINNER !!!!", Toast.LENGTH_SHORT).show();
+            animateFacesOut();
+            //profilesRepository.unregister(listener);
+        }
+
     }
 
 
     @Override
     public void onClick(View v) {
-        Log.d("test==", "onClick: "+(Integer)v.getId());
-        Log.d("test==", "onClick: "+container.indexOfChild(v));
-        onPersonSelected(v, faces.get());
+        //Log.d("test==", "onClick: "+(Integer)v.getId());
+        //Log.d("test==", "onClick: "+container.indexOfChild(v));
 
+        Person2 selectedPerson= randomList.get(container.indexOfChild(v));
+        onPersonSelected(v, selectedPerson);
 
     }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        profilesRepository.unregister(new ProfilesRepository.Listener() {
+            @Override
+            public void onLoadFinished(@NonNull List<Person2> people) {
+                Log.d("Test", "onLoadFinished: Unregister");
+            }
+
+            @Override
+            public void onError(@NonNull Throwable error) {
+                Log.d("Test", "onError: Unregister");
+
+            }
+        });
+
+    }
+
+
 }

@@ -54,7 +54,7 @@ public class ProfilesRepository {
 //        });
 //    }
 
-    private void load() {
+    public void load() {
 
         Log.d("Test", "load: "+this.api);
 
