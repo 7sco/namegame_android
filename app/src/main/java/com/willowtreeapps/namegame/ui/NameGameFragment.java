@@ -214,9 +214,6 @@ public class NameGameFragment extends Fragment implements OnClickListener{
 
     @Override
     public void onClick(View v) {
-        //Log.d("test==", "onClick: "+(Integer)v.getId());
-        //Log.d("test==", "onClick: "+container.indexOfChild(v));
-
         Person2 selectedPerson= randomList.get(container.indexOfChild(v));
         onPersonSelected(v, selectedPerson);
 

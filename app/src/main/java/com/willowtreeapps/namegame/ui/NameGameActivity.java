@@ -21,7 +21,6 @@ public class NameGameActivity extends AppCompatActivity {
 
         android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
 
-        android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, new NameGameFragment())
                 .addToBackStack(null)
