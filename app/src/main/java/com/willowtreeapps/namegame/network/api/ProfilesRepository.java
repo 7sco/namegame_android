@@ -87,7 +87,7 @@ public class ProfilesRepository {
     public void register(@NonNull Listener listener) {
         if (listeners.contains(listener)) throw new IllegalStateException("Listener is already registered.");
         listeners.add(listener);
-        if (profiles != null) {
+        if (listPerson != null) {
             listener.onLoadFinished(listPerson);
         }
     }

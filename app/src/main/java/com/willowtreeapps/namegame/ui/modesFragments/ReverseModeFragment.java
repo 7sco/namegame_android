@@ -1,4 +1,5 @@
-package com.willowtreeapps.namegame.ui;
+package com.willowtreeapps.namegame.ui.modesFragments;
+
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -6,15 +7,12 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.Button;
 import android.widget.ImageView;
-
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,7 +21,6 @@ import com.willowtreeapps.namegame.R;
 import com.willowtreeapps.namegame.core.ListRandomizer;
 import com.willowtreeapps.namegame.core.NameGameApplication;
 import com.willowtreeapps.namegame.network.api.ProfilesRepository;
-
 import com.willowtreeapps.namegame.network.api.model2.Person2;
 import com.willowtreeapps.namegame.util.CircleBorderTransform;
 import com.willowtreeapps.namegame.util.Ui;
@@ -33,7 +30,11 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-public class NameGameFragment extends Fragment implements OnClickListener{
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
+
+public class ReverseModeFragment extends Fragment implements View.OnClickListener{
 
     private static final Interpolator OVERSHOOT = new OvershootInterpolator();
 
@@ -44,45 +45,46 @@ public class NameGameFragment extends Fragment implements OnClickListener{
     @Inject
     ProfilesRepository profilesRepository;
 
+    private ImageView imageOne;
 
 
-    private TextView title;
-    private ViewGroup container;
-    private Button playAgainButton;
-    private List<ImageView> faces = new ArrayList<>(5);
-
-    ProfilesRepository.Listener listener;
-
+    private List<TextView> names = new ArrayList<>(5);
     private Person2 randomPerson;
     private List<Person2> randomList;
+    ProfilesRepository.Listener listener;
+
+    private ViewGroup container;
+    private View view;
+    private Button playAgainButton;
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         NameGameApplication.get(getActivity()).component().inject(this);
+
     }
 
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.name_game_fragment, container, false);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        view = inflater.inflate(R.layout.fragment_reverse_mode, container, false);
+
+        return view;
     }
 
-
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        title = (TextView) view.findViewById(R.id.title);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        imageOne=view.findViewById(R.id.imagePerson);
         container = (ViewGroup) view.findViewById(R.id.face_container);
         playAgainButton = (Button) view.findViewById(R.id.playAgain);
 
+
         playAgainButton.setVisibility(View.INVISIBLE);
-
         getData();
-
     }
 
     private void getData() {
-
         hideViews();
         listener= new ProfilesRepository.Listener() {
             @Override
@@ -92,8 +94,9 @@ public class NameGameFragment extends Fragment implements OnClickListener{
 
                 randomList=listRandomizer.pickN(people, 6);
                 randomPerson= listRandomizer.pickOne(randomList);
-                title.setText(randomPerson.getFirstName());
-                setImages(faces ,randomList);
+
+                loadImage(randomPerson);
+                setNames(names ,randomList);
             }
 
             @Override
@@ -104,87 +107,77 @@ public class NameGameFragment extends Fragment implements OnClickListener{
         };
 
 
-        profilesRepository.register(listener);
 
+        profilesRepository.register(listener);
         //animateFacesOut();
     }
 
-    private void hideViews() {
-        //Hide the views until data loads
-        title.setAlpha(0);
-
-        int n = container.getChildCount();
-        for (int i = 0; i < n; i++) {
-            ImageView face = (ImageView) container.getChildAt(i);
-            face.setOnClickListener(this);
-            faces.add(face);
-
-            //Hide the views until data loads
-            face.setScaleX(0);
-            face.setScaleY(0);
-        }
-    }
-
-
-    /**
-     * A method for setting the images from people into the imageviews
-     */
-    private void setImages(List<ImageView> faces, List<Person2> profiles) {
+    private void setNames(List<TextView> names, List<Person2> profiles) {
         List<Person2> people = profiles;
-        int imageSize = (int) Ui.convertDpToPixel(100, getContext());
-        int n = faces.size();
+        //int n = names.size();
+        int n = 6;
 
         for (int i = 0; i < n; i++) {
-            ImageView face = faces.get(i);
-            String url="";
-            if(people.get(i).getHeadshot().getUrl()!=null){
-                url= people.get(i).getHeadshot().getUrl();
-                Log.d("Test", "setImages:"+url);
-                url="http://"+url.substring(2,url.length());
-            }
-            picasso.get().load(url)
-                    .placeholder(R.drawable.ic_face_white_48dp)
-                    .resize(imageSize, imageSize)
-                    .transform(new CircleBorderTransform())
-                    .into(face);
-
+            TextView face = names.get(i);
+            face.setText(people.get(i).getFirstName());
         }
         animateFacesIn();
-
-
     }
 
-
-    /**
-     * A method to animate the faces into view
-     */
     private void animateFacesIn() {
-        title.animate().alpha(1).start();
-        for (int i = 0; i < faces.size(); i++) {
-            ImageView face = faces.get(i);
+        imageOne.animate().alpha(1).start();
+        for (int i = 0; i < names.size(); i++) {
+            TextView face = names.get(i);
             face.animate().scaleX(1).scaleY(1).setStartDelay(800 + 120 * i).setInterpolator(OVERSHOOT).start();
         }
     }
 
+    private void loadImage(Person2 person) {
+        int imageSize = (int) Ui.convertDpToPixel(200, getContext());
+        String url="";
+        if(person.getHeadshot().getUrl()!=null){
+            url= person.getHeadshot().getUrl();
+            Log.d("Test", "setImages:"+url);
+            url="http://"+url.substring(2,url.length());
+        }
+        picasso.get().load(url)
+                .placeholder(R.drawable.ic_face_white_48dp)
+                .resize(imageSize, imageSize)
+                .transform(new CircleBorderTransform())
+                .into(imageOne);
+    }
 
-    /**
-     * A method to animate the faces into view
-     */
+
+    private void hideViews() {
+        //Hide the views until data loads
+        //imageOne.setAlpha(0);
+
+        int n = container.getChildCount();
+        for (int i = 0; i < n; i++) {
+            TextView name = (TextView) container.getChildAt(i);
+            name.setOnClickListener(this);
+            names.add(name);
+
+            //Hide the views until data loads
+            name.setScaleX(0);
+            name.setScaleY(0);
+        }
+    }
+
     private void animateFacesOut() {
-        title.animate().alpha(0).start();
+        imageOne.animate().alpha(0).start();
 
 
-        for (int i = faces.size()-1; i >= 0; i--) {
-            ImageView face = faces.get(i);
+        for (int i = names.size()-1; i >= 0; i--) {
+            TextView face = names.get(i);
             face.animate().scaleX(0).scaleY(0).setStartDelay(800 + 120 * i).setInterpolator(OVERSHOOT).start();
         }
 
 
         playAgainButton.setVisibility(View.VISIBLE);
-        playAgainButton.setOnClickListener(new OnClickListener() {
+        playAgainButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 profilesRepository.load();
                 playAgainButton.setVisibility(View.INVISIBLE);
 
@@ -192,12 +185,10 @@ public class NameGameFragment extends Fragment implements OnClickListener{
         });
     }
 
-    /**
-     * A method to handle when a person is selected
-     *
-     * @param view   The view that was selected
-     * @param person The person that was selected
-     */
+    private void animateViewOut(View view) {
+        view.animate().scaleX(0).scaleY(0).setStartDelay(800 + 120).setInterpolator(OVERSHOOT).start();
+    }
+
     private void onPersonSelected(@NonNull View view, @NonNull Person2 person) {
         //TODO evaluate whether it was the right person and make an action based on that
         Log.d("TEST", "onPersonSelected: "+person.getFirstName());
@@ -212,18 +203,12 @@ public class NameGameFragment extends Fragment implements OnClickListener{
 
     }
 
-    private void animateViewOut(View view) {
-        view.animate().scaleX(0).scaleY(0).setStartDelay(800 + 120).setInterpolator(OVERSHOOT).start();
-    }
-
-
     @Override
     public void onClick(View v) {
         Person2 selectedPerson= randomList.get(container.indexOfChild(v));
         onPersonSelected(v, selectedPerson);
 
     }
-
 
     @Override
     public void onDestroyView() {
@@ -242,4 +227,5 @@ public class NameGameFragment extends Fragment implements OnClickListener{
         super.onPause();
         profilesRepository.unregister(listener);
     }
+
 }
