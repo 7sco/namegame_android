@@ -5,4 +5,9 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="modes_txt">MODES</string>
+    <string name="normal_mode_txt">NORMAL MODE</string>
+    <string name="mat_mode_txt">MAT MODE</string>
+    <string name="reverse_game_txt">REVERSE GAME</string>
+    <string name="stats_txt">STATS</string>
 </resources>

@@ -67,7 +67,7 @@ public class NameGameFragment extends Fragment implements OnClickListener{
     private Person2 randomPerson;
     private List<Person2> randomList;
     private List<Person2> matList;
-    private Boolean isMatMode;
+    private Boolean isMatMode=false;
     SharedPreferences prefs;
 
     @Override
@@ -152,7 +152,8 @@ public class NameGameFragment extends Fragment implements OnClickListener{
         else {
            randomList=  listRandomizer.pickN(people, 6);
             randomPerson= listRandomizer.pickOne(randomList);
-            title.setText(randomPerson.getFirstName());
+            String fullName=randomPerson.getFirstName()+" "+randomPerson.getLastName();
+            title.setText(fullName);
             setImages(faces ,randomList);
         }
     }

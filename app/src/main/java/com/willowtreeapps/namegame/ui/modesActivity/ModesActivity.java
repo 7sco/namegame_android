@@ -19,9 +19,6 @@ import butterknife.OnClick;
 
 public class ModesActivity extends AppCompatActivity {
 
-
-    @BindView(R.id.hint_game)
-    Button hintGame;
     @BindView(R.id.textView2)
     TextView textView2;
     @BindView(R.id.normal_game)
@@ -45,15 +42,11 @@ public class ModesActivity extends AppCompatActivity {
     }
 
 
-    @OnClick({R.id.hint_game, R.id.normal_game, R.id.mat_game, R.id.reverse_game, R.id.stats_btn})
+    @OnClick({R.id.normal_game, R.id.mat_game, R.id.reverse_game, R.id.stats_btn})
     public void onViewClicked(View view) {
         Intent i =new Intent(this, NameGameActivity.class);
 
         switch (view.getId()) {
-            case R.id.hint_game:
-                showToast("Hint Mode");
-                i.putExtra("mode", "hint");
-                break;
             case R.id.normal_game:
                 showToast("Normal Mode");
                 i.putExtra("mode", "normal");
