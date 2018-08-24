@@ -1,12 +1,12 @@
 package com.willowtreeapps.namegame.ui;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -33,6 +33,17 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
+import io.reactivex.functions.Predicate;
+import io.reactivex.schedulers.Schedulers;
+
+import static android.content.Context.MODE_PRIVATE;
+
 public class NameGameFragment extends Fragment implements OnClickListener{
 
     private static final Interpolator OVERSHOOT = new OvershootInterpolator();
@@ -55,6 +66,9 @@ public class NameGameFragment extends Fragment implements OnClickListener{
 
     private Person2 randomPerson;
     private List<Person2> randomList;
+    private List<Person2> matList;
+    private Boolean isMatMode;
+    SharedPreferences prefs;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -77,8 +91,20 @@ public class NameGameFragment extends Fragment implements OnClickListener{
 
         playAgainButton.setVisibility(View.INVISIBLE);
 
+        getMode();
+
         getData();
 
+    }
+
+    private void getMode() {
+        prefs = this.getActivity().getSharedPreferences("MyPrefsFile", MODE_PRIVATE);
+        String modeMat = prefs.getString("modeNormal", null);
+        if (modeMat != null) {
+            if (modeMat.equals("mat")){
+                isMatMode=true;
+            }
+        }
     }
 
     private void getData() {
@@ -90,10 +116,11 @@ public class NameGameFragment extends Fragment implements OnClickListener{
                 Log.d("TEST", "onLoadFinished: ");
                 //Gets List and Randomizes list, get only 5 elements
 
-                randomList=listRandomizer.pickN(people, 6);
-                randomPerson= listRandomizer.pickOne(randomList);
-                title.setText(randomPerson.getFirstName());
-                setImages(faces ,randomList);
+                getRandomList(people);
+                //randomList=listRandomizer.pickN(people, 6);
+//                randomPerson= listRandomizer.pickOne(randomList);
+//                title.setText(randomPerson.getFirstName());
+//                setImages(faces ,randomList);
             }
 
             @Override
@@ -108,6 +135,61 @@ public class NameGameFragment extends Fragment implements OnClickListener{
 
         //animateFacesOut();
     }
+
+    private void getRandomList(List<Person2> people) {
+        if(isMatMode){
+            //get all mat
+             Observable.just(people).subscribeOn(Schedulers.io())
+                    .flatMapIterable(new Function<List<Person2>, List<Person2>>() {
+                        @Override public List<Person2> apply(List<Person2> v) {
+                            return v;
+                        }
+                    })
+                    .filter(person2 -> person2.getFirstName().contains("Mat"))
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(getObserver());
+        }
+        else {
+           randomList=  listRandomizer.pickN(people, 6);
+            randomPerson= listRandomizer.pickOne(randomList);
+            title.setText(randomPerson.getFirstName());
+            setImages(faces ,randomList);
+        }
+    }
+
+
+        private Observer<Person2> getObserver(){
+            return  new Observer<Person2>(){
+                @Override
+                public void onSubscribe(Disposable d) {
+                    Log.d("Rx" ,"onSubscribe: SUBSCRIBED");
+                    matList= new ArrayList<>();
+                }
+
+                @Override
+                public void onNext(Person2 person2) {
+                    Log.d("Rx", "onNext: "+person2.getFirstName());
+                    matList.add(person2);
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    Log.d("Rx", "onError: ");
+                }
+
+                @Override
+                public void onComplete() {
+                    Log.d("Rx", "onComplete: ");
+                    Log.d("Rx", "onComplete: "+matList.size());
+                    randomList=listRandomizer.pickN(matList, 6);
+                    randomPerson= listRandomizer.pickOne(matList);
+                    title.setText(randomPerson.getFirstName()+" "+randomPerson.getLastName());
+                    setImages(faces ,matList);
+                }
+            };
+        }
+
+
 
     private void hideViews() {
         //Hide the views until data loads

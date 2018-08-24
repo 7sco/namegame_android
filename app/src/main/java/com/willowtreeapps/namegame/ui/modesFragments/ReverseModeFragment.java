@@ -22,6 +22,7 @@ import com.willowtreeapps.namegame.core.ListRandomizer;
 import com.willowtreeapps.namegame.core.NameGameApplication;
 import com.willowtreeapps.namegame.network.api.ProfilesRepository;
 import com.willowtreeapps.namegame.network.api.model2.Person2;
+import com.willowtreeapps.namegame.ui.modesFragments.presenter.ReverseModePresenter;
 import com.willowtreeapps.namegame.util.CircleBorderTransform;
 import com.willowtreeapps.namegame.util.Ui;
 
@@ -34,7 +35,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
-public class ReverseModeFragment extends Fragment implements View.OnClickListener{
+public class ReverseModeFragment extends Fragment implements View.OnClickListener, Contract.View{
 
     private static final Interpolator OVERSHOOT = new OvershootInterpolator();
 
@@ -44,6 +45,9 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
     Picasso picasso;
     @Inject
     ProfilesRepository profilesRepository;
+
+
+    ReverseModePresenter presenter;
 
     private ImageView imageOne;
 
@@ -61,52 +65,34 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         NameGameApplication.get(getActivity()).component().inject(this);
-
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_reverse_mode, container, false);
-
         return view;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        setViews(view);
+        presenter= new ReverseModePresenter(this, listRandomizer, picasso, profilesRepository, listener);
+
+        getData();
+    }
+
+    private void setViews(@NonNull View view) {
         imageOne=view.findViewById(R.id.imagePerson);
         container = (ViewGroup) view.findViewById(R.id.face_container);
         playAgainButton = (Button) view.findViewById(R.id.playAgain);
-
-
         playAgainButton.setVisibility(View.INVISIBLE);
-        getData();
     }
 
     private void getData() {
         hideViews();
-        listener= new ProfilesRepository.Listener() {
-            @Override
-            public void onLoadFinished(@NonNull List<Person2> people) {
-                Log.d("TEST", "onLoadFinished: ");
-                //Gets List and Randomizes list, get only 5 elements
 
-                randomList=listRandomizer.pickN(people, 6);
-                randomPerson= listRandomizer.pickOne(randomList);
-
-                loadImage(randomPerson);
-                setNames(names ,randomList);
-            }
-
-            @Override
-            public void onError(@NonNull Throwable error) {
-                Log.d("TEST", "onError: "+error.getMessage());
-
-            }
-        };
-
-
+        presenter.getData();
 
         profilesRepository.register(listener);
         //animateFacesOut();

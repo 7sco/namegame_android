@@ -4,6 +4,7 @@ import com.willowtreeapps.namegame.network.NetworkModule;
 import com.willowtreeapps.namegame.ui.NameGameActivity;
 import com.willowtreeapps.namegame.ui.NameGameFragment;
 import com.willowtreeapps.namegame.ui.modesFragments.ReverseModeFragment;
+import com.willowtreeapps.namegame.ui.modesFragments.presenter.ReverseModePresenter;
 
 import javax.inject.Singleton;
 
@@ -18,4 +19,5 @@ public interface ApplicationComponent {
     void inject(NameGameActivity activity);
     void inject(NameGameFragment fragment);
     void inject(ReverseModeFragment fragment);
+    void inject(ReverseModePresenter presenter);
 }
