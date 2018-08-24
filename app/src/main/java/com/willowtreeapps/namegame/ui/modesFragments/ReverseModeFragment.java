@@ -1,6 +1,5 @@
 package com.willowtreeapps.namegame.ui.modesFragments;
 
-
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -31,13 +30,10 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.Unbinder;
-
-public class ReverseModeFragment extends Fragment implements View.OnClickListener, Contract.View{
+public class ReverseModeFragment extends Fragment implements View.OnClickListener, Contract.ViewContract {
 
     private static final Interpolator OVERSHOOT = new OvershootInterpolator();
+    private static final String TAG= ReverseModeFragment.class.getSimpleName();
 
     @Inject
     ListRandomizer listRandomizer;
@@ -46,17 +42,9 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
     @Inject
     ProfilesRepository profilesRepository;
 
-
-    ReverseModePresenter presenter;
-
+    private ReverseModePresenter presenter;
     private ImageView imageOne;
-
-
     private List<TextView> names = new ArrayList<>(5);
-    private Person2 randomPerson;
-    private List<Person2> randomList;
-    ProfilesRepository.Listener listener;
-
     private ViewGroup container;
     private View view;
     private Button playAgainButton;
@@ -77,37 +65,20 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         setViews(view);
-        presenter= new ReverseModePresenter(this, listRandomizer, picasso, profilesRepository, listener);
-
+        presenter= new ReverseModePresenter(this, listRandomizer, profilesRepository);
         getData();
     }
 
     private void setViews(@NonNull View view) {
         imageOne=view.findViewById(R.id.imagePerson);
-        container = (ViewGroup) view.findViewById(R.id.face_container);
-        playAgainButton = (Button) view.findViewById(R.id.playAgain);
+        container = view.findViewById(R.id.face_container);
+        playAgainButton = view.findViewById(R.id.playAgain);
         playAgainButton.setVisibility(View.INVISIBLE);
     }
 
     private void getData() {
         hideViews();
-
         presenter.getData();
-
-        profilesRepository.register(listener);
-        //animateFacesOut();
-    }
-
-    private void setNames(List<TextView> names, List<Person2> profiles) {
-        List<Person2> people = profiles;
-        //int n = names.size();
-        int n = 6;
-
-        for (int i = 0; i < n; i++) {
-            TextView face = names.get(i);
-            face.setText(people.get(i).getFirstName());
-        }
-        animateFacesIn();
     }
 
     private void animateFacesIn() {
@@ -118,21 +89,61 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
         }
     }
 
-    private void loadImage(Person2 person) {
+    @Override
+    public void loadImage(String url) {
         int imageSize = (int) Ui.convertDpToPixel(200, getContext());
-        String url="";
-        if(person.getHeadshot().getUrl()!=null){
-            url= person.getHeadshot().getUrl();
-            Log.d("Test", "setImages:"+url);
-            url="http://"+url.substring(2,url.length());
-        }
         picasso.get().load(url)
-                .placeholder(R.drawable.ic_face_white_48dp)
-                .resize(imageSize, imageSize)
-                .transform(new CircleBorderTransform())
-                .into(imageOne);
+            .placeholder(R.drawable.ic_face_white_48dp)
+            .resize(imageSize, imageSize)
+            .transform(new CircleBorderTransform())
+            .into(imageOne);
     }
 
+    @Override
+    public void setNames(List<Person2> people) {
+        int n = names.size();
+        for (int i = 0; i < n; i++) {
+            TextView face = names.get(i);
+            String fullName= people.get(i).getFirstName()+" "+people.get(i).getLastName();
+            face.setText(fullName);
+        }
+        animateFacesIn();
+    }
+
+    @Override
+    public void animateFacesOut() {
+        imageOne.animate().alpha(0).start();
+        for (int i = names.size()-1; i >= 0; i--) {
+            TextView face = names.get(i);
+            face.animate().scaleX(0).scaleY(0).setStartDelay(800 + 120 * i).setInterpolator(OVERSHOOT).start();
+        }
+        showPlayAgainButton();
+    }
+
+    private void showPlayAgainButton() {
+        playAgainButton.setVisibility(View.VISIBLE);
+        playAgainButton.setOnClickListener(v -> {
+            //profilesRepository.load();
+            presenter.reShuffle();
+            playAgainButton.setVisibility(View.INVISIBLE);
+        });
+    }
+
+    @Override
+    public void showToast(String message) {
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void animateViewOut(int position) {
+        names.get(position).animate().scaleX(0).scaleY(0).setStartDelay(800 + 120).setInterpolator(OVERSHOOT).start();
+        //view.animate().scaleX(0).scaleY(0).setStartDelay(800 + 120).setInterpolator(OVERSHOOT).start();
+    }
+
+    @Override
+    public void logMessage(String message) {
+        Log.d(TAG, "logMessage: "+message);
+    }
 
     private void hideViews() {
         //Hide the views until data loads
@@ -150,68 +161,26 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
         }
     }
 
-    private void animateFacesOut() {
-        imageOne.animate().alpha(0).start();
-
-
-        for (int i = names.size()-1; i >= 0; i--) {
-            TextView face = names.get(i);
-            face.animate().scaleX(0).scaleY(0).setStartDelay(800 + 120 * i).setInterpolator(OVERSHOOT).start();
-        }
-
-
-        playAgainButton.setVisibility(View.VISIBLE);
-        playAgainButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                profilesRepository.load();
-                playAgainButton.setVisibility(View.INVISIBLE);
-
-            }
-        });
-    }
-
-    private void animateViewOut(View view) {
-        view.animate().scaleX(0).scaleY(0).setStartDelay(800 + 120).setInterpolator(OVERSHOOT).start();
-    }
-
-    private void onPersonSelected(@NonNull View view, @NonNull Person2 person) {
-        //TODO evaluate whether it was the right person and make an action based on that
-        Log.d("TEST", "onPersonSelected: "+person.getFirstName());
-
-        if (person==randomPerson){
-            Toast.makeText(getContext(), "WINNER !!!!", Toast.LENGTH_SHORT).show();
-            animateFacesOut();
-            //profilesRepository.unregister(listener);
-        }else {
-            animateViewOut(view);
-        }
-
-    }
-
     @Override
     public void onClick(View v) {
-        Person2 selectedPerson= randomList.get(container.indexOfChild(v));
-        onPersonSelected(v, selectedPerson);
-
+        presenter.getClickedViewInfo( container.indexOfChild(v));
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        profilesRepository.unregister(listener);
+        presenter.unregisterListener();
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        profilesRepository.unregister(listener);
+        presenter.unregisterListener();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        profilesRepository.unregister(listener);
+        presenter.unregisterListener();
     }
-
 }

@@ -1,13 +1,36 @@
 package com.willowtreeapps.namegame.ui.modesFragments;
 
-public interface Contract {
-    interface View{
+import android.view.View;
 
+import com.willowtreeapps.namegame.network.api.model2.Person2;
+
+import java.util.List;
+
+public interface Contract {
+    interface ViewContract {
+
+        void loadImage(String url);
+
+        void setNames(List<Person2> randomList);
+
+        void animateFacesOut();
+
+        void showToast(String s);
+
+        void animateViewOut(int position);
+
+        void logMessage(String message);
     }
 
     interface Presenter{
 
         void getData();
+
+        void getClickedViewInfo(int position);
+
+        void unregisterListener();
+
+        void reShuffle();
     }
 
 
