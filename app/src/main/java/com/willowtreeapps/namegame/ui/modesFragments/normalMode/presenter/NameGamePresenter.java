@@ -1,4 +1,4 @@
-package com.willowtreeapps.namegame.ui.modesFragments;
+package com.willowtreeapps.namegame.ui.modesFragments.normalMode.presenter;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -6,6 +6,8 @@ import android.util.Log;
 import com.willowtreeapps.namegame.core.ListRandomize;
 import com.willowtreeapps.namegame.network.api.ProfilesRepository;
 import com.willowtreeapps.namegame.network.api.model2.Person2;
+import com.willowtreeapps.namegame.ui.modesFragments.normalMode.NameGameContract;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +18,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
-public class NameGamePresenter implements NameGameContract.Presenter{
+public class NameGamePresenter implements NameGameContract.Presenter {
     private NameGameContract.ViewContract viewImpl;
     private ListRandomize listRandomize;
     private ProfilesRepository profilesRepository;
@@ -67,12 +69,12 @@ public class NameGamePresenter implements NameGameContract.Presenter{
 
         }
         else {
-            fillData(downloadedList);
+            fillData();
         }
     }
 
-    private void fillData(List<Person2> people) {
-        randomList=  listRandomize.pickN(people, 6);
+    private void fillData() {
+        randomList=  listRandomize.pickN(downloadedList, 6);
         randomPerson= listRandomize.pickOne(randomList);
         setPersonName(randomPerson);
         loadImages(randomList);
@@ -104,7 +106,9 @@ public class NameGamePresenter implements NameGameContract.Presenter{
 
             @Override
             public void onComplete() {
-                fillData(matList);
+                downloadedList=matList;
+                fillData();
+
             }
         };
     }
@@ -146,12 +150,7 @@ public class NameGamePresenter implements NameGameContract.Presenter{
 
     @Override
     public void reShuffle() {
-        if(isMatMode){
-            fillData(matList);
-        }
-        else {
-            fillData(downloadedList);
-        }
+        fillData();
     }
 
     @Override
@@ -163,6 +162,36 @@ public class NameGamePresenter implements NameGameContract.Presenter{
             isMatMode=false;
         }
     }
+
+    @Override
+    public void updateRandomList(List<Person2> randomList) {
+        this.randomList=randomList;
+    }
+
+    @Override
+    public void updateRandomPerson(Person2 randomPerson) {
+        this.randomPerson=randomPerson;
+    }
+
+    @Override
+    public void updatedownloadedList(List<Person2> downloadedList) {
+        this.downloadedList=downloadedList;
+    }
+
+    @Override
+    public void getallData() {
+        viewImpl.sendRandomPerson(randomPerson);
+        viewImpl.sendRandomList(randomList);
+        viewImpl.sendMainList(downloadedList);
+    }
+
+//    @Override
+//    public void loadSavedPerson(Person2 personSaved) {
+//        loadImage(personSaved);
+//        viewImpl.loadName();
+//        viewImpl.loadImage(personSaved);
+//    }
+
 
 
 }

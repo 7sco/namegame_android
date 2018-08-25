@@ -2,12 +2,13 @@ package com.willowtreeapps.namegame.core;
 
 import android.support.annotation.NonNull;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class ListRandomize {
+public class ListRandomize implements Serializable {
 
     @NonNull
     private final Random random;

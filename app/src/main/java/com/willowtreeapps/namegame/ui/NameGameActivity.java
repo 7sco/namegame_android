@@ -1,86 +1,82 @@
 package com.willowtreeapps.namegame.ui;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 import com.willowtreeapps.namegame.R;
 import com.willowtreeapps.namegame.core.NameGameApplication;
-import com.willowtreeapps.namegame.ui.modesFragments.ReverseModeFragment;
-import com.willowtreeapps.namegame.ui.stats.StatsFragment;
+import com.willowtreeapps.namegame.ui.modesFragments.normalMode.NormalModeActivity;
+import com.willowtreeapps.namegame.ui.modesFragments.reverseMode.ReverseModeActivity;
+import com.willowtreeapps.namegame.ui.stats.StatsActivity;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class NameGameActivity extends AppCompatActivity {
 
-    private static final String FRAG_TAG = "NameGameFragmentTag";
-    private android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
-
-    SharedPreferences.Editor editor ;
+    @BindView(R.id.textView2)
+    TextView textView2;
+    @BindView(R.id.normal_game)
+    Button normalGame;
+    @BindView(R.id.mat_game)
+    Button matGame;
+    @BindView(R.id.reverse_game)
+    Button reverseGame;
+    @BindView(R.id.textView4)
+    TextView textView4;
+    @BindView(R.id.stats_btn)
+    Button statsBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.name_game_activity);
+        ButterKnife.bind(this);
         NameGameApplication.get(this).component().inject(this);
-
-        getIntentExtras();
     }
 
-    private void getIntentExtras() {
-        Intent intent= getIntent();
-        String mode=intent.getExtras().getString("mode");
-        editor = getSharedPreferences("MyPrefsFile", MODE_PRIVATE).edit();
-        switch (mode){
-            case "hint":
+    @OnClick({R.id.normal_game, R.id.mat_game, R.id.reverse_game, R.id.stats_btn})
+    public void onViewClicked(View view) {
+        Intent i= null;
+        SharedPreferences.Editor editor = getSharedPreferences("MyPrefsFile", MODE_PRIVATE).edit();
 
+        switch (view.getId()) {
+            case R.id.normal_game:
+                showToast("Normal Mode");
+                i = new Intent(this, NormalModeActivity.class);
+                editor.putString("modeNormal", "normal");
                 break;
-            case "reverse":
-                loadFragment(new ReverseModeFragment());
+            case R.id.mat_game:
+                showToast("Mat Mode");
+                i = new Intent(this, NormalModeActivity.class);
+                editor.putString("modeNormal", "mat");
                 break;
-            case "stats":
-                loadFragment(new StatsFragment());
+            case R.id.reverse_game:
+                showToast("Reverse Mode");
+                i = new Intent(this, ReverseModeActivity.class);
                 break;
-                default:
-                    editor.putString("modeNormal", mode);
-                    loadFragment(new NameGameFragment());
+            case R.id.stats_btn:
+                showToast("Stats");
+                i= new Intent(this, StatsActivity.class);
+                break;
         }
         editor.apply();
+        startActivity(i);
     }
 
-    private void loadFragment(android.support.v4.app.Fragment fragment) {
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
-                .addToBackStack(null)
-                .addToBackStack("currentFragment")
-                .commit();
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        clearStack();
         finish();
     }
 
-    public void clearStack() {
-        //Here we are clearing back stack fragment entries
-        int backStackEntry = getSupportFragmentManager().getBackStackEntryCount();
-        if (backStackEntry > 0) {
-            for (int i = 0; i < backStackEntry; i++) {
-                getSupportFragmentManager().popBackStackImmediate();
-            }
-        }
-        //Here we are removing all the fragment that are shown here
-        if (getSupportFragmentManager().getFragments() != null && getSupportFragmentManager().getFragments().size() > 0) {
-            for (int i = 0; i < getSupportFragmentManager().getFragments().size(); i++) {
-                android.support.v4.app.Fragment mFragment = getSupportFragmentManager().getFragments().get(i);
-                if (mFragment != null) {
-                    getSupportFragmentManager().beginTransaction().remove(mFragment).commit();
-                }
-            }
-        }
-    }
 }

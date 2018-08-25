@@ -13,14 +13,16 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
-        <activity android:name=".ui.modesActivity.ModesActivity">
+        <activity android:name=".ui.NameGameActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.NameGameActivity"></activity>
+        <activity android:name=".ui.modesFragments.reverseMode.ReverseModeActivity" />
+        <activity android:name=".ui.modesFragments.normalMode.NormalModeActivity" />
+        <activity android:name=".ui.stats.StatsActivity"></activity>
     </application>
 
 </manifest>

@@ -3,9 +3,10 @@ package com.willowtreeapps.namegame.network.api.model2;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Person2 {
+public class Person2 implements Serializable {
 
 
 //    @Expose
