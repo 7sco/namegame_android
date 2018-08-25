@@ -1,108 +1,98 @@
 package com.willowtreeapps.namegame.network.api.model;
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import com.google.gson.annotations.SerializedName;
 
-import java.util.List;
+import java.io.Serializable;
 
-public class Person implements Parcelable {
+public class Person implements Serializable {
 
-    private final String id;
-    private final String type;
-    private final String slug;
-    private final String jobTitle;
-    private final String firstName;
-    private final String lastName;
-    private final Headshot headshot;
-    private final List<String> socialLinks;
 
-    public Person(String id,
-                  String type,
-                  String slug,
-                  String jobTitle,
-                  String firstName,
-                  String lastName,
-                  Headshot headshot,
-                  List<String> socialLinks) {
-        this.id = id;
-        this.type = type;
-        this.slug = slug;
-        this.jobTitle = jobTitle;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.headshot = headshot;
-        this.socialLinks = socialLinks;
+
+    @SerializedName("bio")
+    private String bio;
+
+    @SerializedName("headshot")
+    private Headshot headshot;
+
+    @SerializedName("lastName")
+    private String lastName;
+
+    @SerializedName("firstName")
+    private String firstName;
+
+    @SerializedName("jobTitle")
+    private String jobTitle;
+
+    @SerializedName("slug")
+    private String slug;
+
+    @SerializedName("type")
+    private String type;
+
+    @SerializedName("id")
+    private String id;
+
+    public String getBio() {
+        return bio;
     }
 
-    private Person(Parcel in) {
-        this.id = in.readString();
-        this.type = in.readString();
-        this.slug = in.readString();
-        this.jobTitle = in.readString();
-        this.firstName = in.readString();
-        this.lastName = in.readString();
-        this.headshot = in.readParcelable(Headshot.class.getClassLoader());
-        this.socialLinks = in.createStringArrayList();
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public String getSlug() {
-        return slug;
-    }
-
-    public String getJobTitle() {
-        return jobTitle;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
     public Headshot getHeadshot() {
         return headshot;
     }
 
-    public List<String> getSocialLinks() {
-        return socialLinks;
+    public void setHeadshot(Headshot headshot) {
+        this.headshot = headshot;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.id);
-        dest.writeString(this.type);
-        dest.writeString(this.slug);
-        dest.writeString(this.jobTitle);
-        dest.writeString(this.firstName);
-        dest.writeString(this.lastName);
-        dest.writeParcelable(this.headshot, flags);
-        dest.writeStringList(this.socialLinks);
+    public String getLastName() {
+        return lastName;
     }
 
-    public static final Creator<Person> CREATOR = new Creator<Person>() {
-        @Override
-        public Person createFromParcel(Parcel source) {
-            return new Person(source);
-        }
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
 
-        @Override
-        public Person[] newArray(int size) {
-            return new Person[size];
-        }
-    };
+    public String getFirstName() {
+        return firstName;
+    }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getJobTitle() {
+        return jobTitle;
+    }
+
+    public void setJobTitle(String jobTitle) {
+        this.jobTitle = jobTitle;
+    }
+
+    public String getSlug() {
+        return slug;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

@@ -5,8 +5,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.willowtreeapps.namegame.network.api.model.Person;
-import com.willowtreeapps.namegame.network.api.model.Profiles;
-import com.willowtreeapps.namegame.network.api.model2.Person2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,8 +21,7 @@ public class ProfilesRepository {
     @NonNull
     private List<Listener> listeners = new ArrayList<>(1);
     @Nullable
-    private Person2 profiles;
-    List<Person2> listPerson;
+    List<Person> listPerson;
 
     public ProfilesRepository(@NonNull NameGameApi api, Listener... listeners) {
         this.api = api;
@@ -34,52 +31,23 @@ public class ProfilesRepository {
         load();
     }
 
-//    private void load() {
-//        this.api.getProfiles().enqueue(new Callback<Profiles>() {
-//            @Override
-//            public void onResponse(Call<Profiles> call, Response<Profiles> response) {
-//                Log.d("test", "onResponse: "+response.toString());
-//                profiles = response.body();
-//                for (Listener listener : listeners) {
-//                    listener.onLoadFinished(profiles);
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<Profiles> call, Throwable t) {
-//                for (Listener listener : listeners) {
-//                    listener.onError(t);
-//                }
-//            }
-//        });
-//    }
-
     public void load() {
-
-        Log.d("Test", "load: "+this.api);
-
-        this.api.getProfiles().enqueue(new Callback<List<Person2>>() {
+        this.api.getProfiles().enqueue(new Callback<List<Person>>() {
             @Override
-            public void onResponse(Call<List<Person2>> call, Response<List<Person2>> response) {
-                Log.d("Test", "onResponse: "+response.toString());
-                Log.d("Test", "onResponse: "+response.body().get(0).getFirstName());
-//                profiles = response.body().toArray();
+            public void onResponse(Call<List<Person>> call, Response<List<Person>> response) {
                 listPerson= new ArrayList<>();
                listPerson=response.body();
-
                 for (Listener listener : listeners) {
                     listener.onLoadFinished(listPerson);
                 }
-
             }
 
             @Override
-            public void onFailure(Call<List<Person2>> call, Throwable t) {
+            public void onFailure(Call<List<Person>> call, Throwable t) {
                 Log.d("Test", "onResponse: "+t.getMessage());
                 for (Listener listener : listeners) {
                     listener.onError(t);
                 }
-
             }
         });
     }
@@ -97,7 +65,7 @@ public class ProfilesRepository {
     }
 
     public interface Listener {
-        void onLoadFinished(@NonNull List<Person2> people);
+        void onLoadFinished(@NonNull List<Person> people);
         void onError(@NonNull Throwable error);
     }
 

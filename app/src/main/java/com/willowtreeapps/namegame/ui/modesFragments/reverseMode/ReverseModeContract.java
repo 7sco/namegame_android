@@ -1,9 +1,7 @@
 package com.willowtreeapps.namegame.ui.modesFragments.reverseMode;
 
-import com.willowtreeapps.namegame.core.ListRandomize;
-import com.willowtreeapps.namegame.network.api.model2.Person2;
+import com.willowtreeapps.namegame.network.api.model.Person;
 
-import java.io.Serializable;
 import java.util.List;
 
 public interface ReverseModeContract {
@@ -11,7 +9,7 @@ public interface ReverseModeContract {
 
         void loadImage(String url);
 
-        void setNames(List<Person2> randomList);
+        void setNames(List<Person> randomList);
 
         void animateFacesOut();
 
@@ -19,13 +17,11 @@ public interface ReverseModeContract {
 
         void animateViewOut(int position);
 
-        void logMessage(String message);
+        void sendRandomList(List<Person> randomList);
 
-        void sendRandomList(List<Person2> randomList);
+        void sendRandomPerson(Person randomPerson);
 
-        void sendRandomPerson(Person2 randomPerson);
-
-        void sendMainList(List<Person2> downloadedList);
+        void sendMainList(List<Person> downloadedList);
     }
 
     interface Presenter{
@@ -38,20 +34,14 @@ public interface ReverseModeContract {
 
         void reShuffle();
 
-        void getRandomList();
+        void loadSavedPerson(Person personSaved);
 
-        void loadSavedPerson(Person2 personSaved);
+        void updateRandomList(List<Person> randomList);
 
-        void loadSavedRandomList(List<Person2> listSaved);
+        void updateRandomPerson(Person randomPerson);
 
-        void updateRandomList(List<Person2> randomList);
+        void updatedownloadedList(List<Person> downloadedList);
 
-        void updateRandomPerson(Person2 randomPerson);
-
-        void updatedownloadedList(List<Person2> downloadedList);
-
-        void getallData();
+        void getAllData();
     }
-
-
 }

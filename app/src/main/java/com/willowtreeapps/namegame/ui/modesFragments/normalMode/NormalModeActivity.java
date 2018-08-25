@@ -1,10 +1,12 @@
 package com.willowtreeapps.namegame.ui.modesFragments.normalMode;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
@@ -19,7 +21,7 @@ import com.willowtreeapps.namegame.R;
 import com.willowtreeapps.namegame.core.ListRandomize;
 import com.willowtreeapps.namegame.core.NameGameApplication;
 import com.willowtreeapps.namegame.network.api.ProfilesRepository;
-import com.willowtreeapps.namegame.network.api.model2.Person2;
+import com.willowtreeapps.namegame.network.api.model.Person;
 import com.willowtreeapps.namegame.ui.modesFragments.normalMode.presenter.NameGamePresenter;
 import com.willowtreeapps.namegame.util.CircleBorderTransform;
 import com.willowtreeapps.namegame.util.Ui;
@@ -30,7 +32,11 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-public class NormalModeActivity extends AppCompatActivity implements View.OnClickListener, NameGameContract.ViewContract{
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
+public class NormalModeActivity extends AppCompatActivity implements View.OnClickListener, NameGameContract.ViewContract {
 
     private static final Interpolator OVERSHOOT = new OvershootInterpolator();
 
@@ -40,81 +46,116 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
     Picasso picasso;
     @Inject
     ProfilesRepository profilesRepository;
+    @BindView(R.id.playAgain)
+    Button playAgainButton;
 
     private TextView title;
     private ViewGroup container;
-    private Button playAgainButton;
     private List<ImageView> faces = new ArrayList<>(5);
     private SharedPreferences prefs;
     private NameGamePresenter presenter;
-    private int correctCounter=0;
-    private int incorrectCounter=0;
-    List<Person2> randomList;
-    List<Person2> downloadedList;
-    Person2 randomPerson;
+    private int correctCounter = 0;
+    private int incorrectCounter = 0;
+    private List<Person> randomList;
+    private List<Person> downloadedList;
+    private Person randomPerson;
+    private boolean connected;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_normal_mode);
+        ButterKnife.bind(this);
         NameGameApplication.get(this).component().inject(this);
-
         setViews();
-        presenter= new NameGamePresenter(this, listRandomize, profilesRepository);
+        presenter = new NameGamePresenter(this, listRandomize, profilesRepository);
         getMode();
         prefsUpdateStats();
-        if(savedInstanceState!=null){
-            randomList= (ArrayList<Person2>) savedInstanceState.getSerializable("randomList");
-            downloadedList= (ArrayList<Person2>) savedInstanceState.getSerializable("downloadedList");
-            randomPerson= (Person2) savedInstanceState.getSerializable("randomPerson");
-            presenter.updatedownloadedList(downloadedList);
-            presenter.updateRandomList(randomList);
-            presenter.updateRandomPerson(randomPerson);
-            String name=randomPerson.getFirstName()+ " "+randomPerson.getLastName();
-            hideViews();
-            setName(name);
-            loadImage(randomList);
-            //setNames(randomList);
-        }
-        else{
-            getData();
-        }
-
+        networkStatus();
+        manageRotation(savedInstanceState);
     }
 
+    private void networkStatus() {
+        ConnectivityManager cm = (ConnectivityManager)getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo nInfo = cm.getActiveNetworkInfo();
+        connected = nInfo != null && nInfo.isAvailable() && nInfo.isConnected();
+    }
+
+    /**
+     * @param outState onSaveInstanceState() store data before rotation
+     */
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        presenter.getallData();
-        outState.putSerializable("randomList", (Serializable) randomList);
-        outState.putSerializable("randomPerson", randomPerson);
-        outState.putSerializable("downloadedList", (Serializable)downloadedList);
-
+        presenter.getAllData();
+        outState.putSerializable(getResources().getString(R.string.randomList), (Serializable) randomList);
+        outState.putSerializable(getResources().getString(R.string.randomPerson), randomPerson);
+        outState.putSerializable(getResources().getString(R.string.downloadedList), (Serializable) downloadedList);
         super.onSaveInstanceState(outState);
     }
 
-
-    private void prefsUpdateStats() {
-        correctCounter=prefs.getInt("correct",0);
-        incorrectCounter=prefs.getInt("incorrect",0);
+    /**
+     *
+     * @param savedInstanceState
+     * manageRotation() checks savedInstanceState to use data saved after rotation
+     */
+    private void manageRotation(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            randomList = (ArrayList<Person>) savedInstanceState.getSerializable(getResources().getString(R.string.randomList));
+            downloadedList = (ArrayList<Person>) savedInstanceState.getSerializable(getResources().getString(R.string.downloadedList));
+            randomPerson = (Person) savedInstanceState.getSerializable(getResources().getString(R.string.randomPerson));
+            presenter.updateDownloadedList(downloadedList);
+            presenter.updateRandomList(randomList);
+            presenter.updateRandomPerson(randomPerson);
+            String name = randomPerson.getFirstName() + " " + randomPerson.getLastName();
+            hideViews();
+            setName(name);
+            loadImage(randomList);
+        } else {
+            if(connected){
+                getData();
+            }
+            else{
+                Toast.makeText(this,getResources().getString(R.string.network_fail) , Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
+    /**
+     * Set views at creation of activity
+     */
     private void setViews() {
         title = findViewById(R.id.title);
         container = findViewById(R.id.face_container);
-        playAgainButton = findViewById(R.id.playAgain);
         playAgainButton.setVisibility(View.INVISIBLE);
     }
 
-    private void getMode() {
-        prefs = this.getSharedPreferences("MyPrefsFile", MODE_PRIVATE);
-        presenter.checkMatModeEnable(prefs.getString("modeNormal", null));
+    /**
+     * prefsUpdateStats() get correct & incorrect count from sharedPreferences to be updated
+     */
+    private void prefsUpdateStats() {
+        correctCounter = prefs.getInt(getResources().getString(R.string.correct), 0);
+        incorrectCounter = prefs.getInt(getResources().getString(R.string.incorrect), 0);
     }
 
+    /**
+     * getMode() gets mode type to determine what type of people is shown
+     */
+    private void getMode() {
+        prefs = this.getSharedPreferences(getResources().getString(R.string.sharedP), MODE_PRIVATE);
+        presenter.checkMatModeEnable(prefs.getString(getResources().getString(R.string.modeNormal), null));
+    }
+
+    /**
+     * getData() hides views at creation and then proceeds to getData with network request
+     */
     private void getData() {
         hideViews();
         presenter.getData();
     }
 
+    /**
+     * hideViews() Hide all views before getting data so no dummy data is shown
+     */
     private void hideViews() {
         //Hide the views until data loads
         title.setAlpha(0);
@@ -123,7 +164,6 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
             ImageView face = (ImageView) container.getChildAt(i);
             face.setOnClickListener(this);
             faces.add(face);
-
             //Hide the views until data loads
             face.setScaleX(0);
             face.setScaleY(0);
@@ -142,22 +182,40 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
     }
 
     /**
+     * A method to animate the faces into view
+     */
+    @Override
+    public void animateFacesOut() {
+        title.animate().alpha(0).start();
+        for (int i = faces.size() - 1; i >= 0; i--) {
+            ImageView face = faces.get(i);
+            face.animate().scaleX(0).scaleY(0).setStartDelay(50 * i).setInterpolator(OVERSHOOT).start();
+        }
+        correctCounter++;
+        playAgainButton.setVisibility(View.VISIBLE);
+    }
+
+    @OnClick(R.id.playAgain)
+    public void onViewClicked() {
+        presenter.reShuffle();
+        playAgainButton.setVisibility(View.INVISIBLE);
+    }
+
+    /**
      * A method for setting the images from people into the imageviews
      */
     @Override
-    public void loadImage(List<Person2> profiles) {
+    public void loadImage(List<Person> profiles) {
         int imageSize = (int) Ui.convertDpToPixel(100, this);
         int n = faces.size();
         for (int i = 0; i < n; i++) {
             ImageView face = faces.get(i);
-            String url="";
-            if(profiles.get(i).getHeadshot().getUrl()!=null){
-                url= profiles.get(i).getHeadshot().getUrl();
-                Log.d("Test", "setImages:"+url);
-                url="http://"+url.substring(2,url.length());
-            }
-            else {
-                url="http://grupsapp.com/wp-content/uploads/2016/04/willowtreeapps.png";
+            String url = "";
+            if (profiles.get(i).getHeadshot().getUrl() != null) {
+                url = profiles.get(i).getHeadshot().getUrl();
+                url = getResources().getString(R.string.http) + url.substring(2, url.length());
+            } else {
+                url = getResources().getString(R.string.linkImage);
             }
             picasso.get().load(url)
                     .placeholder(R.drawable.ic_face_white_48dp)
@@ -168,31 +226,14 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
         animateFacesIn();
     }
 
-
-    /**
-     * A method to animate the faces into view
-     */
-    @Override
-    public void animateFacesOut() {
-        title.animate().alpha(0).start();
-        for (int i = faces.size()-1; i >= 0; i--) {
-            ImageView face = faces.get(i);
-            face.animate().scaleX(0).scaleY(0).setStartDelay(50 * i).setInterpolator(OVERSHOOT).start();
-        }
-        correctCounter++;
-        playAgainButton.setVisibility(View.VISIBLE);
-        playAgainButton.setOnClickListener(v -> {
-            presenter.reShuffle();
-            playAgainButton.setVisibility(View.INVISIBLE);
-        });
-
-    }
-
     @Override
     public void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * @param position animateViewOut() hides view at given position
+     */
     @Override
     public void animateViewOut(int position) {
         faces.get(position).animate().scaleX(0).scaleY(0).setStartDelay(100).setInterpolator(OVERSHOOT).start();
@@ -200,12 +241,8 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
     }
 
     @Override
-    public void logMessage(String message) {
-    }
-
-    @Override
     public void setName(String fullName) {
-        title.setText(fullName );
+        title.setText(fullName);
     }
 
     @Override
@@ -213,40 +250,54 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
         presenter.getClickedViewInfo(container.indexOfChild(v));
     }
 
-
-
+    /**
+     *
+     * @param randomList
+     * sendRandomList() send data retrieved after rotation to presenter
+     */
     @Override
-    protected void onStop() {
-        super.onStop();
-
-        SharedPreferences.Editor editor = this.getSharedPreferences("MyPrefsFile", MODE_PRIVATE).edit();
-        editor.putInt("correct", correctCounter);
-        editor.putInt("incorrect", incorrectCounter);
-        editor.apply();
-        presenter.unregisterListener();
+    public void sendRandomList(List<Person> randomList) {
+        this.randomList = randomList;
     }
 
+    /**
+     *
+     * @param randomPerson
+     *  sendRandomPerson() send data retrieved after rotation to presenter
+     */
     @Override
-    public void sendRandomList(List<Person2> randomList) {
-        Log.d("Test1", "sendRandomList: "+randomList.get(0).getFirstName());
-        this.randomList=randomList;
+    public void sendRandomPerson(Person randomPerson) {
+        this.randomPerson = randomPerson;
     }
 
+    /**
+     *
+     * @param downloadedList
+     * sendMainList() send data retrieved after rotation to presenter
+     */
     @Override
-    public void sendRandomPerson(Person2 randomPerson) {
-        Log.d("Test1", "sendRandomPerson: Person"+randomPerson.getFirstName());
-        this.randomPerson=randomPerson;
+    public void sendMainList(List<Person> downloadedList) {
+        this.downloadedList = downloadedList;
     }
-
-    @Override
-    public void sendMainList(List<Person2> downloadedList) {
-        this.downloadedList=downloadedList;
-    }
-
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        presenter.unregisterListener();
         finish();
     }
+
+    /**
+     * onStop() updates shared preferences stats
+     */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        SharedPreferences.Editor editor = this.getSharedPreferences(getResources().getString(R.string.sharedP), MODE_PRIVATE).edit();
+        editor.putInt(getResources().getString(R.string.correct), correctCounter);
+        editor.putInt(getResources().getString(R.string.incorrect), incorrectCounter);
+        editor.apply();
+        presenter.unregisterListener();
+    }
+
 }

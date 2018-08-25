@@ -2,7 +2,6 @@ package com.willowtreeapps.namegame.core;
 
 import com.willowtreeapps.namegame.network.NetworkModule;
 import com.willowtreeapps.namegame.ui.NameGameActivity;
-import com.willowtreeapps.namegame.ui.NameGameFragment;
 import com.willowtreeapps.namegame.ui.modesFragments.normalMode.NormalModeActivity;
 import com.willowtreeapps.namegame.ui.modesFragments.reverseMode.ReverseModeActivity;
 

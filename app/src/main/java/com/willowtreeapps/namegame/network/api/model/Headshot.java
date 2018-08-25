@@ -1,97 +1,84 @@
 package com.willowtreeapps.namegame.network.api.model;
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
-public class Headshot implements Parcelable {
-
-    private String type;
-    private String mimeType;
-    private String id;
-    private String url;
-    private String alt;
-    private int height;
+public class Headshot {
+    @Expose
+    @SerializedName("width")
     private int width;
+    @Expose
+    @SerializedName("height")
+    private int height;
+    @Expose
+    @SerializedName("alt")
+    private String alt;
+    @Expose
+    @SerializedName("url")
+    private String url;
+    @Expose
+    @SerializedName("id")
+    private String id;
+    @Expose
+    @SerializedName("mimeType")
+    private String mimeType;
+    @Expose
+    @SerializedName("type")
+    private String type;
 
-    public Headshot(String type,
-                    String mimeType,
-                    String id,
-                    String url,
-                    String alt,
-                    int height,
-                    int width) {
-        this.type = type;
-        this.mimeType = mimeType;
-        this.id = id;
-        this.url = url;
-        this.alt = alt;
-        this.height = height;
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
         this.width = width;
-    }
-
-    private Headshot(Parcel in) {
-        this.type = in.readString();
-        this.mimeType = in.readString();
-        this.id = in.readString();
-        this.url = in.readString();
-        this.alt = in.readString();
-        this.height = in.readInt();
-        this.width = in.readInt();
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public String getMimeType() {
-        return mimeType;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public String getAlt() {
-        return alt;
     }
 
     public int getHeight() {
         return height;
     }
 
-    public int getWidth() {
-        return width;
+    public void setHeight(int height) {
+        this.height = height;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.type);
-        dest.writeString(this.mimeType);
-        dest.writeString(this.id);
-        dest.writeString(this.url);
-        dest.writeString(this.alt);
-        dest.writeInt(this.height);
-        dest.writeInt(this.width);
+    public String getAlt() {
+        return alt;
     }
 
-    public static final Creator<Headshot> CREATOR = new Creator<Headshot>() {
-        @Override
-        public Headshot createFromParcel(Parcel source) {
-            return new Headshot(source);
-        }
+    public void setAlt(String alt) {
+        this.alt = alt;
+    }
 
-        @Override
-        public Headshot[] newArray(int size) {
-            return new Headshot[size];
-        }
-    };
+    public String getUrl() {
+        return url;
+    }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

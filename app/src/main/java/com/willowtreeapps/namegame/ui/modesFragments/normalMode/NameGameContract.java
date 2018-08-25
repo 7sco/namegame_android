@@ -1,6 +1,6 @@
 package com.willowtreeapps.namegame.ui.modesFragments.normalMode;
 
-import com.willowtreeapps.namegame.network.api.model2.Person2;
+import com.willowtreeapps.namegame.network.api.model.Person;
 
 import java.util.List;
 
@@ -13,18 +13,15 @@ public interface NameGameContract {
 
         void animateViewOut(int position);
 
-        void logMessage(String message);
-
         void setName(String fullName);
 
+        void loadImage(List<Person> randomList);
 
-        void loadImage(List<Person2> randomList);
+        void sendRandomList(List<Person> randomList);
 
-        void sendRandomList(List<Person2> randomList);
+        void sendRandomPerson(Person randomPerson);
 
-        void sendRandomPerson(Person2 randomPerson);
-
-        void sendMainList(List<Person2> downloadedList);
+        void sendMainList(List<Person> downloadedList);
     }
 
     interface Presenter{
@@ -39,14 +36,13 @@ public interface NameGameContract {
 
         void checkMatModeEnable(String modeNormal);
 
-        void updatedownloadedList(List<Person2> downloadedList);
+        void updateDownloadedList(List<Person> downloadedList);
 
-        void updateRandomList(List<Person2> randomList);
+        void updateRandomList(List<Person> randomList);
 
-        void updateRandomPerson(Person2 randomPerson);
-        void getallData();
+        void updateRandomPerson(Person randomPerson);
 
-        //void loadSavedPerson(Person2 randomPerson);
+        void getAllData();
     }
 
 

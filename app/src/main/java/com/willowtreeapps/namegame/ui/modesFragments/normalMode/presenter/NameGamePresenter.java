@@ -1,11 +1,9 @@
 package com.willowtreeapps.namegame.ui.modesFragments.normalMode.presenter;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
-
 import com.willowtreeapps.namegame.core.ListRandomize;
 import com.willowtreeapps.namegame.network.api.ProfilesRepository;
-import com.willowtreeapps.namegame.network.api.model2.Person2;
+import com.willowtreeapps.namegame.network.api.model.Person;
 import com.willowtreeapps.namegame.ui.modesFragments.normalMode.NameGameContract;
 
 import java.util.ArrayList;
@@ -19,14 +17,15 @@ import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 public class NameGamePresenter implements NameGameContract.Presenter {
+
     private NameGameContract.ViewContract viewImpl;
     private ListRandomize listRandomize;
     private ProfilesRepository profilesRepository;
     private ProfilesRepository.Listener listener;
-    private Person2 randomPerson;
-    private List<Person2> randomList;
-    private List<Person2> downloadedList;
-    private List<Person2> matList;
+    private Person randomPerson;
+    private List<Person> randomList;
+    private List<Person> downloadedList;
+    private List<Person> matList;
     private Boolean isMatMode;
 
 
@@ -40,12 +39,30 @@ public class NameGamePresenter implements NameGameContract.Presenter {
     public void getData() {
         setListener();
         profilesRepository.register(listener);
-
     }
+
+    /**
+     * @param mode
+     * checkMatModeEnable() helps the presenter know if a Mat filter should be apply to the data
+     */
+    @Override
+    public void checkMatModeEnable(String mode) {
+        if (mode != null && mode.equals("mat")) {
+            isMatMode=true;
+        }
+        else {
+            isMatMode=false;
+        }
+    }
+
+    /**
+     * setListener initiates the listener to be used throughout the activity lifeTime
+     * it contains onLoadFinished() and onError() wich react to the data request to the network
+     */
     private void setListener() {
         listener= new ProfilesRepository.Listener() {
             @Override
-            public void onLoadFinished(@NonNull List<Person2> people) {
+            public void onLoadFinished(@NonNull List<Person> people) {
                 //Gets List and Randomizes list, get only 5 elements
                 downloadedList=people;
                 randomizeData();
@@ -53,26 +70,31 @@ public class NameGamePresenter implements NameGameContract.Presenter {
 
             @Override
             public void onError(@NonNull Throwable error) {
-                viewImpl.logMessage(error.getMessage());
+                viewImpl.showToast("Error");
             }
         };
 
     }
+
+    /**
+     * randomizeData() decides the game mode being played and according to it it will filter data downloaded
+     */
     private void randomizeData() {
         if(isMatMode){
-            //get all mat
             Observable.just(downloadedList).subscribeOn(Schedulers.io())
-                    .flatMapIterable((Function<List<Person2>, List<Person2>>) v -> v)
+                    .flatMapIterable((Function<List<Person>, List<Person>>) v -> v)
                     .filter(person2 -> person2.getFirstName().contains("Mat"))
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(getObserver());
-
         }
         else {
             fillData();
         }
     }
 
+    /**
+     * fillData() gets random n people and a random person from there to be shown on screen
+     */
     private void fillData() {
         randomList=  listRandomize.pickN(downloadedList, 6);
         randomPerson= listRandomize.pickOne(randomList);
@@ -80,50 +102,50 @@ public class NameGamePresenter implements NameGameContract.Presenter {
         loadImages(randomList);
     }
 
-    private void setPersonName(Person2 person) {
+    /**
+     * @param person
+     * setPersonName() send name gather from the randomize list to be displayed
+     */
+    private void setPersonName(Person person) {
         String fullName= person.getFirstName()+" "+ person.getLastName();
         viewImpl.setName(fullName);
     }
 
-    private Observer<Person2> getObserver(){
-        return  new Observer<Person2>(){
+    private Observer<Person> getObserver(){
+        return  new Observer<Person>(){
             @Override
             public void onSubscribe(Disposable d) {
-                Log.d("Rx" ,"onSubscribe: SUBSCRIBED");
                 matList= new ArrayList<>();
             }
-
             @Override
-            public void onNext(Person2 person2) {
-                Log.d("Rx", "onNext: "+person2.getFirstName());
-                matList.add(person2);
+            public void onNext(Person person) { ;
+                matList.add(person);
             }
-
             @Override
             public void onError(Throwable e) {
-                Log.d("Rx", "onError: ");
+                viewImpl.showToast("Error");
             }
-
             @Override
             public void onComplete() {
                 downloadedList=matList;
                 fillData();
-
             }
         };
     }
 
-    private void loadImages(List<Person2> people) {
+    /**
+     * @param people
+     * loadImages() sned a list o people to the view which will display them
+     */
+    private void loadImages(List<Person> people) {
         viewImpl.loadImage(people);
     }
 
-
     @Override
     public void getClickedViewInfo(int position) {
-        Person2 selectedPerson=randomList.get(position);
+        Person selectedPerson=randomList.get(position);
         onPersonSelected(position, selectedPerson);
     }
-
 
     /**
      * A method to handle when a person is selected
@@ -131,7 +153,7 @@ public class NameGamePresenter implements NameGameContract.Presenter {
      * @param position   The view position that was selected
      * @param person The person that was selected
      */
-    public void onPersonSelected(int position, Person2 person) {
+    public void onPersonSelected(int position, Person person) {
         if (person==randomPerson){
             viewImpl.showToast("Correct!!");
             ///all out instead of one by one
@@ -143,55 +165,53 @@ public class NameGamePresenter implements NameGameContract.Presenter {
 
     @Override
     public void unregisterListener() {
-
         profilesRepository.unregister(listener);
-
     }
 
+    /**
+     * reShuffle() from downloaded list it will shuffle list again, new data will be shown
+     * it help to not make a new network call
+     */
     @Override
     public void reShuffle() {
         fillData();
     }
 
+    /**
+     * @param randomList
+     * updateRandomList() update randomList after state change (rotation)
+     */
     @Override
-    public void checkMatModeEnable(String mode) {
-        if (mode != null && mode.equals("mat")) {
-             isMatMode=true;
-        }
-        else {
-            isMatMode=false;
-        }
-    }
-
-    @Override
-    public void updateRandomList(List<Person2> randomList) {
+    public void updateRandomList(List<Person> randomList) {
         this.randomList=randomList;
     }
 
+    /**
+     * @param randomPerson
+     * updateRandomPerson() update randomPerson after state change (rotation)
+     */
     @Override
-    public void updateRandomPerson(Person2 randomPerson) {
+    public void updateRandomPerson(Person randomPerson) {
         this.randomPerson=randomPerson;
     }
 
+    /**
+     * @param downloadedList
+     * updateDownloadedList() update downloadeList after state change (rotation)
+     */
     @Override
-    public void updatedownloadedList(List<Person2> downloadedList) {
+    public void updateDownloadedList(List<Person> downloadedList) {
         this.downloadedList=downloadedList;
     }
 
+    /**
+     * getAllData() send Data to activity to be stored before screen rotation
+     */
     @Override
-    public void getallData() {
+    public void getAllData() {
         viewImpl.sendRandomPerson(randomPerson);
         viewImpl.sendRandomList(randomList);
         viewImpl.sendMainList(downloadedList);
     }
-
-//    @Override
-//    public void loadSavedPerson(Person2 personSaved) {
-//        loadImage(personSaved);
-//        viewImpl.loadName();
-//        viewImpl.loadImage(personSaved);
-//    }
-
-
 
 }

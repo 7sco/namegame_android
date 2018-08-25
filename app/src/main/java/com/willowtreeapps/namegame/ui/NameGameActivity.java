@@ -7,7 +7,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 import com.willowtreeapps.namegame.R;
 import com.willowtreeapps.namegame.core.NameGameApplication;
 import com.willowtreeapps.namegame.ui.modesFragments.normalMode.NormalModeActivity;
@@ -43,25 +42,21 @@ public class NameGameActivity extends AppCompatActivity {
     @OnClick({R.id.normal_game, R.id.mat_game, R.id.reverse_game, R.id.stats_btn})
     public void onViewClicked(View view) {
         Intent i= null;
-        SharedPreferences.Editor editor = getSharedPreferences("MyPrefsFile", MODE_PRIVATE).edit();
+        SharedPreferences.Editor editor = getSharedPreferences(getResources().getString(R.string.sharedP), MODE_PRIVATE).edit();
 
         switch (view.getId()) {
             case R.id.normal_game:
-                showToast("Normal Mode");
                 i = new Intent(this, NormalModeActivity.class);
-                editor.putString("modeNormal", "normal");
+                editor.putString(getResources().getString(R.string.modeNormal), getResources().getString(R.string.normal));
                 break;
             case R.id.mat_game:
-                showToast("Mat Mode");
                 i = new Intent(this, NormalModeActivity.class);
-                editor.putString("modeNormal", "mat");
+                editor.putString(getResources().getString(R.string.modeNormal), getResources().getString(R.string.mat));
                 break;
             case R.id.reverse_game:
-                showToast("Reverse Mode");
                 i = new Intent(this, ReverseModeActivity.class);
                 break;
             case R.id.stats_btn:
-                showToast("Stats");
                 i= new Intent(this, StatsActivity.class);
                 break;
         }
@@ -69,9 +64,6 @@ public class NameGameActivity extends AppCompatActivity {
         startActivity(i);
     }
 
-    private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-    }
 
     @Override
     public void onBackPressed() {

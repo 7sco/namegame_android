@@ -1,9 +1,9 @@
 package com.willowtreeapps.namegame.ui.modesFragments.reverseMode;
 
 import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +19,7 @@ import com.willowtreeapps.namegame.R;
 import com.willowtreeapps.namegame.core.ListRandomize;
 import com.willowtreeapps.namegame.core.NameGameApplication;
 import com.willowtreeapps.namegame.network.api.ProfilesRepository;
-import com.willowtreeapps.namegame.network.api.model2.Person2;
+import com.willowtreeapps.namegame.network.api.model.Person;
 import com.willowtreeapps.namegame.ui.modesFragments.reverseMode.presenter.ReverseModePresenter;
 import com.willowtreeapps.namegame.util.CircleBorderTransform;
 import com.willowtreeapps.namegame.util.Ui;
@@ -30,10 +30,14 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-public class ReverseModeActivity extends AppCompatActivity implements View.OnClickListener, ReverseModeContract.ViewContract{
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
+public class ReverseModeActivity extends AppCompatActivity implements View.OnClickListener, ReverseModeContract.ViewContract {
 
     private static final Interpolator OVERSHOOT = new OvershootInterpolator();
-    private static final String TAG= ReverseModeActivity.class.getSimpleName();
+    private static final String TAG = ReverseModeActivity.class.getSimpleName();
 
     @Inject
     ListRandomize listRandomize;
@@ -41,77 +45,89 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
     Picasso picasso;
     @Inject
     ProfilesRepository profilesRepository;
+    @BindView(R.id.playAgain)
+    Button playAgainButton;
 
     private ReverseModePresenter presenter;
     private ImageView imageOne;
-    private List<TextView> names = new ArrayList<>(5);;
+    private List<TextView> names = new ArrayList<>(5);
     private ViewGroup container;
-    private Button playAgainButton;
     private SharedPreferences prefs;
-    private int correctCounter=0;
-    private int incorrectCounter=0;
-    List<Person2> randomList;
-    List<Person2> downloadedList;
-    Person2 randomPerson;
-    int sizeArray=5;
+    private int correctCounter = 0;
+    private int incorrectCounter = 0;
+    private List<Person> randomList;
+    private List<Person> downloadedList;
+    private Person randomPerson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reverse_mode);
+        ButterKnife.bind(this);
         NameGameApplication.get(this).component().inject(this);
         setViews();
-        presenter= new ReverseModePresenter(this, listRandomize, profilesRepository);
+        presenter = new ReverseModePresenter(this, listRandomize, profilesRepository);
         prefsUpdateStats();
+        manageRotation(savedInstanceState);
+    }
 
-        if(savedInstanceState!=null){
-            randomList= (ArrayList<Person2>) savedInstanceState.getSerializable("randomList");
-            downloadedList= (ArrayList<Person2>) savedInstanceState.getSerializable("downloadedList");
-            randomPerson= (Person2) savedInstanceState.getSerializable("randomPerson");
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        presenter.getAllData();
+        outState.putSerializable(getResources().getString(R.string.randomList), (Serializable) randomList);
+        outState.putSerializable(getResources().getString(R.string.randomPerson), randomPerson);
+        outState.putSerializable(getResources().getString(R.string.downloadedList), (Serializable) downloadedList);
+        super.onSaveInstanceState(outState);
+    }
+
+    /**
+     * @param savedInstanceState manageRotation() checks savedInstanceState to use data saved after rotation
+     */
+    private void manageRotation(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            randomList = (ArrayList<Person>) savedInstanceState.getSerializable("randomList");
+            downloadedList = (ArrayList<Person>) savedInstanceState.getSerializable("downloadedList");
+            randomPerson = (Person) savedInstanceState.getSerializable("randomPerson");
             presenter.updatedownloadedList(downloadedList);
             presenter.updateRandomList(randomList);
             presenter.updateRandomPerson(randomPerson);
             hideViews();
             presenter.loadSavedPerson(randomPerson);
             setNames(randomList);
-        }
-        else{
+        } else {
             getData();
         }
     }
 
-
+    /**
+     * Set views at creation of activity
+     */
     private void setViews() {
-        imageOne=findViewById(R.id.imagePerson);
-        container =findViewById(R.id.face_container);
-        playAgainButton = findViewById(R.id.playAgain);
+        imageOne = findViewById(R.id.imagePerson);
+        container = findViewById(R.id.face_container);
         playAgainButton.setVisibility(View.INVISIBLE);
     }
 
-
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        presenter.getallData();
-        outState.putSerializable("randomList", (Serializable) randomList);
-        outState.putSerializable("randomPerson", randomPerson);
-        outState.putSerializable("downloadedList", (Serializable)downloadedList);
-        super.onSaveInstanceState(outState);
-    }
-
+    /**
+     * prefsUpdateStats() get correct & incorrect count from sharedPreferences to be updated
+     */
     private void prefsUpdateStats() {
-        prefs = this.getSharedPreferences("MyPrefsFile", MODE_PRIVATE);
-        correctCounter=prefs.getInt("correct",0);
-        incorrectCounter=prefs.getInt("incorrect",0);
+        prefs = this.getSharedPreferences(getResources().getString(R.string.sharedP), MODE_PRIVATE);
+        correctCounter = prefs.getInt(getResources().getString(R.string.correct), 0);
+        incorrectCounter = prefs.getInt(getResources().getString(R.string.incorrect), 0);
     }
 
-
-
+    /**
+     * getMode() gets mode type to determine what type of people is shown
+     */
     private void getData() {
         hideViews();
         presenter.getData();
     }
 
+    /**
+     * A method to animate the faces into view
+     */
     private void animateFacesIn() {
         imageOne.animate().alpha(1).start();
         for (int i = 0; i < names.size(); i++) {
@@ -119,21 +135,28 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
             face.animate().scaleX(1).scaleY(1).setStartDelay(800 + 120 * i).setInterpolator(OVERSHOOT).start();
         }
     }
+
+    /**
+     * A method to animate the faces into view
+     */
     @Override
     public void animateFacesOut() {
         imageOne.animate().alpha(0).start();
-        for (int i = names.size()-1; i >= 0; i--) {
+        for (int i = names.size() - 1; i >= 0; i--) {
             TextView face = names.get(i);
             face.animate().scaleX(0).scaleY(0).setStartDelay(50 * i).setInterpolator(OVERSHOOT).start();
         }
         showPlayAgainButton();
     }
 
+    /**
+     * A method for setting the images from people into the imageviews
+     */
     @Override
     public void loadImage(String url) {
         int imageSize = (int) Ui.convertDpToPixel(100, this);
-        if(url.equals("")){
-            url="http://grupsapp.com/wp-content/uploads/2016/04/willowtreeapps.png";
+        if (url.equals("")) {
+            url = getResources().getString(R.string.linkImage);
         }
         picasso.get().load(url)
                 .placeholder(R.drawable.ic_face_white_48dp)
@@ -142,25 +165,34 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
                 .into(imageOne);
     }
 
+    /**
+     * Set views at creation of activity
+     */
     @Override
-    public void setNames(List<Person2> people) {
+    public void setNames(List<Person> people) {
         int n = names.size();
         for (int i = 0; i < n; i++) {
             TextView face = names.get(i);
-            String fullName= people.get(i).getFirstName()+" "+people.get(i).getLastName();
+            String fullName = people.get(i).getFirstName() + " " + people.get(i).getLastName();
             face.setText(fullName);
         }
         animateFacesIn();
     }
 
-
     private void showPlayAgainButton() {
         correctCounter++;
         playAgainButton.setVisibility(View.VISIBLE);
-        playAgainButton.setOnClickListener(v -> {
-            presenter.reShuffle();
-            playAgainButton.setVisibility(View.INVISIBLE);
-        });
+    }
+
+    @OnClick(R.id.playAgain)
+    public void onViewClicked() {
+        presenter.reShuffle();
+        playAgainButton.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onClick(View v) {
+        presenter.getClickedViewInfo(container.indexOfChild(v));
     }
 
     @Override
@@ -168,35 +200,49 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * @param position animateViewOut() hides view at given position
+     */
     @Override
     public void animateViewOut(int position) {
         names.get(position).animate().scaleX(0).scaleY(0).setStartDelay(100).setInterpolator(OVERSHOOT).start();
         incorrectCounter++;
     }
 
+    /**
+     *
+     * @param randomList
+     * sendRandomList() send data retrieved after rotation to presenter
+     */
     @Override
-    public void logMessage(String message) {
-        Log.d(TAG, "logMessage: "+message);
+    public void sendRandomList(List<Person> randomList) {
+        this.randomList = randomList;
     }
 
+    /**
+     *
+     * @param randomPerson
+     *  sendRandomPerson() send data retrieved after rotation to presenter
+     */
     @Override
-    public void sendRandomList(List<Person2> randomList) {
-        Log.d("Test1", "sendRandomList: "+randomList.get(0).getFirstName());
-        this.randomList=randomList;
+    public void sendRandomPerson(Person randomPerson) {
+        Log.d("Test1", "sendRandomPerson: Person" + randomPerson.getFirstName());
+        this.randomPerson = randomPerson;
     }
 
+    /**
+     *
+     * @param downloadedList
+     * sendMainList() send data retrieved after rotation to presenter
+     */
     @Override
-    public void sendRandomPerson(Person2 randomPerson) {
-        Log.d("Test1", "sendRandomPerson: Person"+randomPerson.getFirstName());
-        this.randomPerson=randomPerson;
+    public void sendMainList(List<Person> downloadedList) {
+        this.downloadedList = downloadedList;
     }
 
-    @Override
-    public void sendMainList(List<Person2> downloadedList) {
-        this.downloadedList=downloadedList;
-    }
-
-
+    /**
+     * hideViews() Hide all views before getting data so no dummy data is shown
+     */
     private void hideViews() {
         //Hide the views until data loads
         //imageOne.setAlpha(0);
@@ -212,35 +258,19 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
     }
 
     @Override
-    public void onClick(View v) {
-        presenter.getClickedViewInfo( container.indexOfChild(v));
-    }
-
-    @Override
-    protected void onDestroy() {
-        presenter.unregisterListener();
-        SharedPreferences.Editor editor = this.getSharedPreferences("MyPrefsFile", MODE_PRIVATE).edit();
-        editor.putInt("correct", correctCounter);
-        editor.putInt("incorrect", incorrectCounter);
-        editor.apply();
-        super.onDestroy();
-    }
-
-    //    @Override
-//    public void onDetach() {
-//        super.onDetach();
-//        presenter.unregisterListener();
-//    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        //presenter.unregisterListener();
-    }
-
-    @Override
     public void onBackPressed() {
         super.onBackPressed();
         finish();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        presenter.unregisterListener();
+        SharedPreferences.Editor editor = this.getSharedPreferences(getResources().getString(R.string.sharedP), MODE_PRIVATE).edit();
+        editor.putInt(getResources().getString(R.string.correct), correctCounter);
+        editor.putInt(getResources().getString(R.string.incorrect), incorrectCounter);
+        editor.apply();
+        presenter.unregisterListener();
     }
 }

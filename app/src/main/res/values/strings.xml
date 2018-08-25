@@ -15,4 +15,18 @@
     <string name="percentage_txt">0%</string>
     <string name="average_txt">AVERAGE</string>
     <string name="default_count">0</string>
+    <string name="correct">correct</string>
+    <string name="incorrect">incorrect</string>
+    <string name="average">average</string>
+    <string name="sharedP">MyPrefsFile</string>
+    <string name="percentage_sign">%</string>
+    <string name="modeNormal">modeNormal</string>
+    <string name="normal">normal</string>
+    <string name="mat">mat</string>
+    <string name="randomList">randomList</string>
+    <string name="downloadedList">downloadedList</string>
+    <string name="randomPerson">randomPerson</string>
+    <string name="http">http://</string>
+    <string name="linkImage">http://grupsapp.com/wp-content/uploads/2016/04/willowtreeapps.png</string>
+    <string name="network_fail">Connect to Network</string>
 </resources>
