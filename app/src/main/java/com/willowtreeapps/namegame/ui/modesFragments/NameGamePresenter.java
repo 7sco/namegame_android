@@ -64,6 +64,7 @@ public class NameGamePresenter implements NameGameContract.Presenter{
                     .filter(person2 -> person2.getFirstName().contains("Mat"))
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(getObserver());
+
         }
         else {
             fillData(downloadedList);
@@ -138,13 +139,19 @@ public class NameGamePresenter implements NameGameContract.Presenter{
 
     @Override
     public void unregisterListener() {
+
         profilesRepository.unregister(listener);
 
     }
 
     @Override
     public void reShuffle() {
-        randomizeData();
+        if(isMatMode){
+            fillData(matList);
+        }
+        else {
+            fillData(downloadedList);
+        }
     }
 
     @Override

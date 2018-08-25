@@ -172,7 +172,6 @@ public class NameGameFragment extends Fragment implements OnClickListener, NameG
     @Override
     public void showToast(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
-
     }
 
     @Override
@@ -198,12 +197,12 @@ public class NameGameFragment extends Fragment implements OnClickListener, NameG
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        presenter.unregisterListener();
         SharedPreferences.Editor editor = this.getActivity().getSharedPreferences("MyPrefsFile", MODE_PRIVATE).edit();
         editor.putInt("correct", correctCounter);
         editor.putInt("incorrect", incorrectCounter);
         editor.apply();
     }
+
 
     @Override
     public void onDetach() {
@@ -211,9 +210,4 @@ public class NameGameFragment extends Fragment implements OnClickListener, NameG
         presenter.unregisterListener();
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        presenter.unregisterListener();
-    }
 }

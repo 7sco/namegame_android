@@ -46,6 +46,7 @@ public class ReverseModePresenter implements ReverseModeContract.Presenter{
 
     @Override
     public void unregisterListener() {
+
         profilesRepository.unregister(listener);
     }
 

@@ -73,7 +73,6 @@ public class NameGameActivity extends AppCompatActivity {
                 getSupportFragmentManager().popBackStackImmediate();
             }
         }
-
         //Here we are removing all the fragment that are shown here
         if (getSupportFragmentManager().getFragments() != null && getSupportFragmentManager().getFragments().size() > 0) {
             for (int i = 0; i < getSupportFragmentManager().getFragments().size(); i++) {

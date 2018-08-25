@@ -46,6 +46,7 @@
         android:layout_marginTop="8dp"
         android:text="@string/default_count"
         android:textSize="@dimen/stats_text"
+        android:textColor="@android:color/white"
         app:layout_constraintBottom_toTopOf="@+id/guideline"
         app:layout_constraintEnd_toStartOf="@+id/incorrect_num"
         app:layout_constraintStart_toStartOf="parent"
@@ -62,6 +63,7 @@
         app:layout_constraintBottom_toTopOf="@+id/guideline"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
+        android:textColor="@android:color/white"
         app:layout_constraintStart_toEndOf="@+id/correct_num"
         app:layout_constraintTop_toBottomOf="@+id/incorrect_txt" />
 
@@ -93,6 +95,7 @@
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:textColor="@android:color/white"
         android:text="@string/percentage_txt"
         android:textSize="@dimen/stats_text"
         app:layout_constraintBottom_toBottomOf="parent"

@@ -114,6 +114,9 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
     @Override
     public void loadImage(String url) {
         int imageSize = (int) Ui.convertDpToPixel(100, getContext());
+        if(url.equals("")){
+            url="http://grupsapp.com/wp-content/uploads/2016/04/willowtreeapps.png";
+        }
         picasso.get().load(url)
             .placeholder(R.drawable.ic_face_white_48dp)
             .resize(imageSize, imageSize)
@@ -187,11 +190,11 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
         editor.apply();
     }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        presenter.unregisterListener();
-    }
+//    @Override
+//    public void onDetach() {
+//        super.onDetach();
+//        presenter.unregisterListener();
+//    }
 
     @Override
     public void onPause() {
