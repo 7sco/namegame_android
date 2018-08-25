@@ -3,4 +3,5 @@
     <dimen name="namesSize">20sp</dimen>
     <dimen name="margin_16">16dp</dimen>
     <dimen name="name_textSize">40sp</dimen>
+    <dimen name="stats_text">30sp</dimen>
 </resources>

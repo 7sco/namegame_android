@@ -1,5 +1,6 @@
 package com.willowtreeapps.namegame.ui.modesFragments;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,7 +18,7 @@ import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 import com.willowtreeapps.namegame.R;
-import com.willowtreeapps.namegame.core.ListRandomizer;
+import com.willowtreeapps.namegame.core.ListRandomize;
 import com.willowtreeapps.namegame.core.NameGameApplication;
 import com.willowtreeapps.namegame.network.api.ProfilesRepository;
 import com.willowtreeapps.namegame.network.api.model2.Person2;
@@ -30,13 +31,15 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-public class ReverseModeFragment extends Fragment implements View.OnClickListener, Contract.ViewContract {
+import static android.content.Context.MODE_PRIVATE;
+
+public class ReverseModeFragment extends Fragment implements View.OnClickListener, ReverseModeContract.ViewContract {
 
     private static final Interpolator OVERSHOOT = new OvershootInterpolator();
     private static final String TAG= ReverseModeFragment.class.getSimpleName();
 
     @Inject
-    ListRandomizer listRandomizer;
+    ListRandomize listRandomize;
     @Inject
     Picasso picasso;
     @Inject
@@ -48,6 +51,9 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
     private ViewGroup container;
     private View view;
     private Button playAgainButton;
+    private SharedPreferences prefs;
+    private int correctCounter=0;
+    private int incorrectCounter=0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -65,8 +71,15 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         setViews(view);
-        presenter= new ReverseModePresenter(this, listRandomizer, profilesRepository);
+        presenter= new ReverseModePresenter(this, listRandomize, profilesRepository);
+        prefsUpdateStats();
         getData();
+    }
+
+    private void prefsUpdateStats() {
+        prefs = this.getActivity().getSharedPreferences("MyPrefsFile", MODE_PRIVATE);
+        correctCounter=prefs.getInt("correct",0);
+        incorrectCounter=prefs.getInt("incorrect",0);
     }
 
     private void setViews(@NonNull View view) {
@@ -88,10 +101,19 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
             face.animate().scaleX(1).scaleY(1).setStartDelay(800 + 120 * i).setInterpolator(OVERSHOOT).start();
         }
     }
+    @Override
+    public void animateFacesOut() {
+        imageOne.animate().alpha(0).start();
+        for (int i = names.size()-1; i >= 0; i--) {
+            TextView face = names.get(i);
+            face.animate().scaleX(0).scaleY(0).setStartDelay(50 * i).setInterpolator(OVERSHOOT).start();
+        }
+        showPlayAgainButton();
+    }
 
     @Override
     public void loadImage(String url) {
-        int imageSize = (int) Ui.convertDpToPixel(200, getContext());
+        int imageSize = (int) Ui.convertDpToPixel(100, getContext());
         picasso.get().load(url)
             .placeholder(R.drawable.ic_face_white_48dp)
             .resize(imageSize, imageSize)
@@ -110,20 +132,11 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
         animateFacesIn();
     }
 
-    @Override
-    public void animateFacesOut() {
-        imageOne.animate().alpha(0).start();
-        for (int i = names.size()-1; i >= 0; i--) {
-            TextView face = names.get(i);
-            face.animate().scaleX(0).scaleY(0).setStartDelay(800 + 120 * i).setInterpolator(OVERSHOOT).start();
-        }
-        showPlayAgainButton();
-    }
 
     private void showPlayAgainButton() {
+        correctCounter++;
         playAgainButton.setVisibility(View.VISIBLE);
         playAgainButton.setOnClickListener(v -> {
-            //profilesRepository.load();
             presenter.reShuffle();
             playAgainButton.setVisibility(View.INVISIBLE);
         });
@@ -136,8 +149,8 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void animateViewOut(int position) {
-        names.get(position).animate().scaleX(0).scaleY(0).setStartDelay(800 + 120).setInterpolator(OVERSHOOT).start();
-        //view.animate().scaleX(0).scaleY(0).setStartDelay(800 + 120).setInterpolator(OVERSHOOT).start();
+        names.get(position).animate().scaleX(0).scaleY(0).setStartDelay(100).setInterpolator(OVERSHOOT).start();
+        incorrectCounter++;
     }
 
     @Override
@@ -148,13 +161,11 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
     private void hideViews() {
         //Hide the views until data loads
         //imageOne.setAlpha(0);
-
         int n = container.getChildCount();
         for (int i = 0; i < n; i++) {
             TextView name = (TextView) container.getChildAt(i);
             name.setOnClickListener(this);
             names.add(name);
-
             //Hide the views until data loads
             name.setScaleX(0);
             name.setScaleY(0);
@@ -170,6 +181,10 @@ public class ReverseModeFragment extends Fragment implements View.OnClickListene
     public void onDestroyView() {
         super.onDestroyView();
         presenter.unregisterListener();
+        SharedPreferences.Editor editor = this.getActivity().getSharedPreferences("MyPrefsFile", MODE_PRIVATE).edit();
+        editor.putInt("correct", correctCounter);
+        editor.putInt("incorrect", incorrectCounter);
+        editor.apply();
     }
 
     @Override

@@ -1,24 +1,25 @@
 package com.willowtreeapps.namegame.ui.modesFragments.presenter;
 
 import android.support.annotation.NonNull;
-import com.willowtreeapps.namegame.core.ListRandomizer;
+
+import com.willowtreeapps.namegame.core.ListRandomize;
 import com.willowtreeapps.namegame.network.api.ProfilesRepository;
 import com.willowtreeapps.namegame.network.api.model2.Person2;
-import com.willowtreeapps.namegame.ui.modesFragments.Contract;
+import com.willowtreeapps.namegame.ui.modesFragments.ReverseModeContract;
 import java.util.List;
 
-public class ReverseModePresenter implements Contract.Presenter{
-    private Contract.ViewContract viewImpl;
-    private ListRandomizer listRandomizer;
+public class ReverseModePresenter implements ReverseModeContract.Presenter{
+    private ReverseModeContract.ViewContract viewImpl;
+    private ListRandomize listRandomize;
     private ProfilesRepository profilesRepository;
     private ProfilesRepository.Listener listener;
     private Person2 randomPerson;
     private List<Person2> randomList;
     private List<Person2> downloadedList;
 
-    public ReverseModePresenter(Contract.ViewContract viewImpl, ListRandomizer listRandomizer, ProfilesRepository profilesRepository) {
+    public ReverseModePresenter(ReverseModeContract.ViewContract viewImpl, ListRandomize listRandomize, ProfilesRepository profilesRepository) {
         this.viewImpl = viewImpl;
-        this.listRandomizer = listRandomizer;
+        this.listRandomize = listRandomize;
         this.profilesRepository = profilesRepository;
     }
 
@@ -71,8 +72,8 @@ public class ReverseModePresenter implements Contract.Presenter{
     }
 
     private void randomizeData() {
-        randomList=listRandomizer.pickN(downloadedList, 6);
-        randomPerson= listRandomizer.pickOne(randomList);
+        randomList= listRandomize.pickN(downloadedList, 6);
+        randomPerson= listRandomize.pickOne(randomList);
         loadImage(randomPerson);
         viewImpl.setNames(randomList);
     }
@@ -86,4 +87,5 @@ public class ReverseModePresenter implements Contract.Presenter{
         }
         viewImpl.loadImage(url);
     }
+
 }

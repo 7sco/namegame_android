@@ -44,8 +44,8 @@ class ApplicationModule {
     }
 
     @Provides @NonNull @Singleton
-    public ListRandomizer provideListRandomizer(@NonNull Random random) {
-        return new ListRandomizer(random);
+    public ListRandomize provideListRandomizer(@NonNull Random random) {
+        return new ListRandomize(random);
     }
 
 }

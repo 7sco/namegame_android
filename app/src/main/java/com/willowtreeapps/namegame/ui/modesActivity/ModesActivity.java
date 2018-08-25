@@ -37,8 +37,6 @@ public class ModesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_modes);
         ButterKnife.bind(this);
-
-
     }
 
 

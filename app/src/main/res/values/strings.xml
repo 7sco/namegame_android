@@ -10,4 +10,9 @@
     <string name="mat_mode_txt">MAT MODE</string>
     <string name="reverse_game_txt">REVERSE GAME</string>
     <string name="stats_txt">STATS</string>
+    <string name="correct_txt">CORRECT</string>
+    <string name="incorrect_txt">INCORRECT</string>
+    <string name="percentage_txt">0%</string>
+    <string name="average_txt">AVERAGE</string>
+    <string name="default_count">0</string>
 </resources>

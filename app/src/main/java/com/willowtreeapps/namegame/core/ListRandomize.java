@@ -7,12 +7,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class ListRandomizer {
+public class ListRandomize {
 
     @NonNull
     private final Random random;
 
-    public ListRandomizer(@NonNull Random random) {
+    public ListRandomize(@NonNull Random random) {
         this.random = random;
     }
 

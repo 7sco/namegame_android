@@ -2,7 +2,6 @@ package com.willowtreeapps.namegame.ui;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -17,59 +16,41 @@ import android.widget.ImageView;
 
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.squareup.picasso.Picasso;
 import com.willowtreeapps.namegame.R;
-import com.willowtreeapps.namegame.core.ListRandomizer;
+import com.willowtreeapps.namegame.core.ListRandomize;
 import com.willowtreeapps.namegame.core.NameGameApplication;
 import com.willowtreeapps.namegame.network.api.ProfilesRepository;
-
 import com.willowtreeapps.namegame.network.api.model2.Person2;
+import com.willowtreeapps.namegame.ui.modesFragments.NameGamePresenter;
+import com.willowtreeapps.namegame.ui.modesFragments.NameGameContract;
 import com.willowtreeapps.namegame.util.CircleBorderTransform;
 import com.willowtreeapps.namegame.util.Ui;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.inject.Inject;
-
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Function;
-import io.reactivex.functions.Predicate;
-import io.reactivex.schedulers.Schedulers;
-
 import static android.content.Context.MODE_PRIVATE;
 
-public class NameGameFragment extends Fragment implements OnClickListener{
+public class NameGameFragment extends Fragment implements OnClickListener, NameGameContract.ViewContract{
 
     private static final Interpolator OVERSHOOT = new OvershootInterpolator();
 
     @Inject
-    ListRandomizer listRandomizer;
+    ListRandomize listRandomize;
     @Inject
     Picasso picasso;
     @Inject
     ProfilesRepository profilesRepository;
 
-
-
     private TextView title;
     private ViewGroup container;
     private Button playAgainButton;
     private List<ImageView> faces = new ArrayList<>(5);
-
-    ProfilesRepository.Listener listener;
-
-    private Person2 randomPerson;
-    private List<Person2> randomList;
-    private List<Person2> matList;
-    private Boolean isMatMode=false;
-    SharedPreferences prefs;
-
+    private SharedPreferences prefs;
+    private View view;
+    private NameGamePresenter presenter;
+    private int correctCounter=0;
+    private int incorrectCounter=0;
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,123 +60,45 @@ public class NameGameFragment extends Fragment implements OnClickListener{
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.name_game_fragment, container, false);
+        view= inflater.inflate(R.layout.name_game_fragment, container, false);
+        return view;
     }
 
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        title = (TextView) view.findViewById(R.id.title);
-        container = (ViewGroup) view.findViewById(R.id.face_container);
-        playAgainButton = (Button) view.findViewById(R.id.playAgain);
-
-        playAgainButton.setVisibility(View.INVISIBLE);
-
+        setViews();
+        presenter= new NameGamePresenter(this, listRandomize, profilesRepository);
         getMode();
-
+        prefsUpdateStats();
         getData();
+    }
 
+    private void prefsUpdateStats() {
+        correctCounter=prefs.getInt("correct",0);
+        incorrectCounter=prefs.getInt("incorrect",0);
+    }
+
+    private void setViews() {
+        title = view.findViewById(R.id.title);
+        container = view.findViewById(R.id.face_container);
+        playAgainButton = view.findViewById(R.id.playAgain);
+        playAgainButton.setVisibility(View.INVISIBLE);
     }
 
     private void getMode() {
         prefs = this.getActivity().getSharedPreferences("MyPrefsFile", MODE_PRIVATE);
-        String modeMat = prefs.getString("modeNormal", null);
-        if (modeMat != null) {
-            if (modeMat.equals("mat")){
-                isMatMode=true;
-            }
-        }
+        presenter.checkMatModeEnable(prefs.getString("modeNormal", null));
     }
 
     private void getData() {
-
         hideViews();
-        listener= new ProfilesRepository.Listener() {
-            @Override
-            public void onLoadFinished(@NonNull List<Person2> people) {
-                Log.d("TEST", "onLoadFinished: ");
-                //Gets List and Randomizes list, get only 5 elements
-
-                getRandomList(people);
-                //randomList=listRandomizer.pickN(people, 6);
-//                randomPerson= listRandomizer.pickOne(randomList);
-//                title.setText(randomPerson.getFirstName());
-//                setImages(faces ,randomList);
-            }
-
-            @Override
-            public void onError(@NonNull Throwable error) {
-                Log.d("TEST", "onError: "+error.getMessage());
-
-            }
-        };
-
-
-        profilesRepository.register(listener);
-
-        //animateFacesOut();
+        presenter.getData();
     }
-
-    private void getRandomList(List<Person2> people) {
-        if(isMatMode){
-            //get all mat
-             Observable.just(people).subscribeOn(Schedulers.io())
-                    .flatMapIterable(new Function<List<Person2>, List<Person2>>() {
-                        @Override public List<Person2> apply(List<Person2> v) {
-                            return v;
-                        }
-                    })
-                    .filter(person2 -> person2.getFirstName().contains("Mat"))
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(getObserver());
-        }
-        else {
-           randomList=  listRandomizer.pickN(people, 6);
-            randomPerson= listRandomizer.pickOne(randomList);
-            String fullName=randomPerson.getFirstName()+" "+randomPerson.getLastName();
-            title.setText(fullName);
-            setImages(faces ,randomList);
-        }
-    }
-
-
-        private Observer<Person2> getObserver(){
-            return  new Observer<Person2>(){
-                @Override
-                public void onSubscribe(Disposable d) {
-                    Log.d("Rx" ,"onSubscribe: SUBSCRIBED");
-                    matList= new ArrayList<>();
-                }
-
-                @Override
-                public void onNext(Person2 person2) {
-                    Log.d("Rx", "onNext: "+person2.getFirstName());
-                    matList.add(person2);
-                }
-
-                @Override
-                public void onError(Throwable e) {
-                    Log.d("Rx", "onError: ");
-                }
-
-                @Override
-                public void onComplete() {
-                    Log.d("Rx", "onComplete: ");
-                    Log.d("Rx", "onComplete: "+matList.size());
-                    randomList=listRandomizer.pickN(matList, 6);
-                    randomPerson= listRandomizer.pickOne(matList);
-                    title.setText(randomPerson.getFirstName()+" "+randomPerson.getLastName());
-                    setImages(faces ,matList);
-                }
-            };
-        }
-
-
 
     private void hideViews() {
         //Hide the views until data loads
         title.setAlpha(0);
-
         int n = container.getChildCount();
         for (int i = 0; i < n; i++) {
             ImageView face = (ImageView) container.getChildAt(i);
@@ -208,36 +111,6 @@ public class NameGameFragment extends Fragment implements OnClickListener{
         }
     }
 
-
-    /**
-     * A method for setting the images from people into the imageviews
-     */
-    private void setImages(List<ImageView> faces, List<Person2> profiles) {
-        List<Person2> people = profiles;
-        int imageSize = (int) Ui.convertDpToPixel(100, getContext());
-        int n = faces.size();
-
-        for (int i = 0; i < n; i++) {
-            ImageView face = faces.get(i);
-            String url="";
-            if(people.get(i).getHeadshot().getUrl()!=null){
-                url= people.get(i).getHeadshot().getUrl();
-                Log.d("Test", "setImages:"+url);
-                url="http://"+url.substring(2,url.length());
-            }
-            picasso.get().load(url)
-                    .placeholder(R.drawable.ic_face_white_48dp)
-                    .resize(imageSize, imageSize)
-                    .transform(new CircleBorderTransform())
-                    .into(face);
-
-        }
-        animateFacesIn();
-
-
-    }
-
-
     /**
      * A method to animate the faces into view
      */
@@ -249,80 +122,98 @@ public class NameGameFragment extends Fragment implements OnClickListener{
         }
     }
 
+    /**
+     * A method for setting the images from people into the imageviews
+     */
+    @Override
+    public void loadImage(List<Person2> profiles) {
+        int imageSize = (int) Ui.convertDpToPixel(100, getContext());
+        int n = faces.size();
+        for (int i = 0; i < n; i++) {
+            ImageView face = faces.get(i);
+            String url="";
+            if(profiles.get(i).getHeadshot().getUrl()!=null){
+                url= profiles.get(i).getHeadshot().getUrl();
+                Log.d("Test", "setImages:"+url);
+                url="http://"+url.substring(2,url.length());
+            }
+            else {
+                url="http://grupsapp.com/wp-content/uploads/2016/04/willowtreeapps.png";
+            }
+            picasso.get().load(url)
+                    .placeholder(R.drawable.ic_face_white_48dp)
+                    .resize(imageSize, imageSize)
+                    .transform(new CircleBorderTransform())
+                    .into(face);
+        }
+        animateFacesIn();
+    }
+
 
     /**
      * A method to animate the faces into view
      */
-    private void animateFacesOut() {
+    @Override
+    public void animateFacesOut() {
         title.animate().alpha(0).start();
-
-
         for (int i = faces.size()-1; i >= 0; i--) {
             ImageView face = faces.get(i);
-            face.animate().scaleX(0).scaleY(0).setStartDelay(800 + 120 * i).setInterpolator(OVERSHOOT).start();
+            face.animate().scaleX(0).scaleY(0).setStartDelay(50 * i).setInterpolator(OVERSHOOT).start();
         }
-
-
+        correctCounter++;
         playAgainButton.setVisibility(View.VISIBLE);
-        playAgainButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                profilesRepository.load();
-                playAgainButton.setVisibility(View.INVISIBLE);
-
-            }
+        playAgainButton.setOnClickListener(v -> {
+            presenter.reShuffle();
+            playAgainButton.setVisibility(View.INVISIBLE);
         });
-    }
-
-    /**
-     * A method to handle when a person is selected
-     *
-     * @param view   The view that was selected
-     * @param person The person that was selected
-     */
-    private void onPersonSelected(@NonNull View view, @NonNull Person2 person) {
-        //TODO evaluate whether it was the right person and make an action based on that
-        Log.d("TEST", "onPersonSelected: "+person.getFirstName());
-
-        if (person==randomPerson){
-            Toast.makeText(getContext(), "WINNER !!!!", Toast.LENGTH_SHORT).show();
-            animateFacesOut();
-            //profilesRepository.unregister(listener);
-        }else {
-            animateViewOut(view);
-        }
 
     }
 
-    private void animateViewOut(View view) {
-        view.animate().scaleX(0).scaleY(0).setStartDelay(800 + 120).setInterpolator(OVERSHOOT).start();
+    @Override
+    public void showToast(String message) {
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+
     }
 
+    @Override
+    public void animateViewOut(int position) {
+        faces.get(position).animate().scaleX(0).scaleY(0).setStartDelay(100).setInterpolator(OVERSHOOT).start();
+        incorrectCounter++;
+    }
+
+    @Override
+    public void logMessage(String message) {
+    }
+
+    @Override
+    public void setName(String fullName) {
+        title.setText(fullName );
+    }
 
     @Override
     public void onClick(View v) {
-        Person2 selectedPerson= randomList.get(container.indexOfChild(v));
-        onPersonSelected(v, selectedPerson);
-
+        presenter.getClickedViewInfo(container.indexOfChild(v));
     }
-
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        profilesRepository.unregister(listener);
+        presenter.unregisterListener();
+        SharedPreferences.Editor editor = this.getActivity().getSharedPreferences("MyPrefsFile", MODE_PRIVATE).edit();
+        editor.putInt("correct", correctCounter);
+        editor.putInt("incorrect", incorrectCounter);
+        editor.apply();
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        profilesRepository.unregister(listener);
+        presenter.unregisterListener();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        profilesRepository.unregister(listener);
+        presenter.unregisterListener();
     }
 }

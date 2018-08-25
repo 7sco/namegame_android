@@ -1,12 +1,10 @@
 package com.willowtreeapps.namegame.ui.modesFragments;
 
-import android.view.View;
-
 import com.willowtreeapps.namegame.network.api.model2.Person2;
 
 import java.util.List;
 
-public interface Contract {
+public interface ReverseModeContract {
     interface ViewContract {
 
         void loadImage(String url);
