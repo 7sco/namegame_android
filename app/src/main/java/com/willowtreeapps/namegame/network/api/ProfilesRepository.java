@@ -65,5 +65,4 @@ public class ProfilesRepository {
         void onLoadFinished(@NonNull List<Person> people);
         void onError(@NonNull Throwable error);
     }
-
 }

@@ -188,7 +188,6 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
      * hideViews() Hide all views before getting data so no dummy data is shown
      */
     private void hideViews() {
-        //Hide the views until data loads
         title.setAlpha(0);
         int n = container.getChildCount();
         for (int i = 0; i < n; i++) {

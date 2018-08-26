@@ -38,7 +38,6 @@ public class NameGamePresenter implements NameGameContract.Presenter {
     @Override
     public void getData() {
         setListener();
-        //profilesRepository.load();
         profilesRepository.register(listener);
     }
 

@@ -7,7 +7,6 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
@@ -175,8 +174,6 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
      * hideViews() Hide all views before getting data so no dummy data is shown
      */
     private void hideViews() {
-        //Hide the views until data loads
-        //imageOne.setAlpha(0);
         int n = container.getChildCount();
         for (int i = 0; i < n; i++) {
             TextView name = (TextView) container.getChildAt(i);
