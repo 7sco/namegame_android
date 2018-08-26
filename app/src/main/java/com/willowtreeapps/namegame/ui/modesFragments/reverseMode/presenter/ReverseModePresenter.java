@@ -9,6 +9,7 @@ import com.willowtreeapps.namegame.ui.modesFragments.reverseMode.ReverseModeCont
 import java.util.List;
 
 public class ReverseModePresenter implements ReverseModeContract.Presenter{
+
     private ReverseModeContract.ViewContract viewImpl;
     private ListRandomize listRandomize;
     private ProfilesRepository profilesRepository;
@@ -26,6 +27,7 @@ public class ReverseModePresenter implements ReverseModeContract.Presenter{
     @Override
     public void getData() {
         setListener();
+        //profilesRepository.load();
         profilesRepository.register(listener);
     }
 
@@ -105,7 +107,6 @@ public class ReverseModePresenter implements ReverseModeContract.Presenter{
     public void reShuffle() {
         randomizeData();
     }
-
 
     @Override
     public void loadSavedPerson(Person personSaved) {

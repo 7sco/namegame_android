@@ -46,19 +46,21 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
     Picasso picasso;
     @Inject
     ProfilesRepository profilesRepository;
-    @BindView(R.id.playAgain)
+    @BindView(R.id.play_again_btn)
     Button playAgainButton;
+    @BindView(R.id.reload_btn)
+    Button reloadBtn;
 
     private TextView title;
     private ViewGroup container;
     private List<ImageView> faces = new ArrayList<>(5);
-    private SharedPreferences prefs;
-    private NameGamePresenter presenter;
-    private int correctCounter = 0;
-    private int incorrectCounter = 0;
     private List<Person> randomList;
     private List<Person> downloadedList;
+    private SharedPreferences prefs;
+    private NameGamePresenter presenter;
     private Person randomPerson;
+    private int correctCounter = 0;
+    private int incorrectCounter = 0;
     private boolean connected;
 
     @Override
@@ -75,12 +77,6 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
         manageRotation(savedInstanceState);
     }
 
-    private void networkStatus() {
-        ConnectivityManager cm = (ConnectivityManager)getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo nInfo = cm.getActiveNetworkInfo();
-        connected = nInfo != null && nInfo.isAvailable() && nInfo.isConnected();
-    }
-
     /**
      * @param outState onSaveInstanceState() store data before rotation
      */
@@ -94,12 +90,10 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
     }
 
     /**
-     *
-     * @param savedInstanceState
-     * manageRotation() checks savedInstanceState to use data saved after rotation
+     * @param savedInstanceState manageRotation() checks savedInstanceState to use data saved after rotation
      */
     private void manageRotation(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
+        if (savedInstanceState != null && connected) {
             randomList = (ArrayList<Person>) savedInstanceState.getSerializable(getResources().getString(R.string.randomList));
             downloadedList = (ArrayList<Person>) savedInstanceState.getSerializable(getResources().getString(R.string.downloadedList));
             randomPerson = (Person) savedInstanceState.getSerializable(getResources().getString(R.string.randomPerson));
@@ -111,20 +105,21 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
             setName(name);
             loadImage(randomList);
         } else {
-            if(connected){
-                getData();
-            }
-            else{
-                Toast.makeText(this,getResources().getString(R.string.network_fail) , Toast.LENGTH_SHORT).show();
-            }
+            getDataOnConnection();
         }
+    }
+
+    private void networkStatus() {
+        ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo nInfo = cm.getActiveNetworkInfo();
+        connected = nInfo != null && nInfo.isAvailable() && nInfo.isConnected();
     }
 
     /**
      * Set views at creation of activity
      */
     private void setViews() {
-        title = findViewById(R.id.title);
+        title = findViewById(R.id.person_name);
         container = findViewById(R.id.face_container);
         playAgainButton.setVisibility(View.INVISIBLE);
     }
@@ -153,20 +148,14 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
         presenter.getData();
     }
 
-    /**
-     * hideViews() Hide all views before getting data so no dummy data is shown
-     */
-    private void hideViews() {
-        //Hide the views until data loads
-        title.setAlpha(0);
-        int n = container.getChildCount();
-        for (int i = 0; i < n; i++) {
-            ImageView face = (ImageView) container.getChildAt(i);
-            face.setOnClickListener(this);
-            faces.add(face);
-            //Hide the views until data loads
-            face.setScaleX(0);
-            face.setScaleY(0);
+    private void getDataOnConnection() {
+        networkStatus();
+        if (connected) {
+            getData();
+            reloadBtn.setVisibility(View.GONE);
+        } else {
+            reloadBtn.setVisibility(View.VISIBLE);
+            Toast.makeText(this, getResources().getString(R.string.network_fail), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -195,10 +184,21 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
         playAgainButton.setVisibility(View.VISIBLE);
     }
 
-    @OnClick(R.id.playAgain)
-    public void onViewClicked() {
-        presenter.reShuffle();
-        playAgainButton.setVisibility(View.INVISIBLE);
+    /**
+     * hideViews() Hide all views before getting data so no dummy data is shown
+     */
+    private void hideViews() {
+        //Hide the views until data loads
+        title.setAlpha(0);
+        int n = container.getChildCount();
+        for (int i = 0; i < n; i++) {
+            ImageView face = (ImageView) container.getChildAt(i);
+            face.setOnClickListener(this);
+            faces.add(face);
+            //Hide the views until data loads
+            face.setScaleX(0);
+            face.setScaleY(0);
+        }
     }
 
     /**
@@ -226,6 +226,19 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
         animateFacesIn();
     }
 
+    @OnClick({R.id.play_again_btn, R.id.reload_btn})
+    public void onViewClicked(View view) {
+        switch (view.getId()) {
+            case R.id.play_again_btn:
+                presenter.reShuffle();
+                playAgainButton.setVisibility(View.INVISIBLE);
+                break;
+            case R.id.reload_btn:
+                getDataOnConnection();
+                break;
+        }
+    }
+
     @Override
     public void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
@@ -251,9 +264,7 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
     }
 
     /**
-     *
-     * @param randomList
-     * sendRandomList() send data retrieved after rotation to presenter
+     * @param randomList sendRandomList() send data retrieved after rotation to presenter
      */
     @Override
     public void sendRandomList(List<Person> randomList) {
@@ -261,9 +272,7 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
     }
 
     /**
-     *
-     * @param randomPerson
-     *  sendRandomPerson() send data retrieved after rotation to presenter
+     * @param randomPerson sendRandomPerson() send data retrieved after rotation to presenter
      */
     @Override
     public void sendRandomPerson(Person randomPerson) {
@@ -271,9 +280,7 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
     }
 
     /**
-     *
-     * @param downloadedList
-     * sendMainList() send data retrieved after rotation to presenter
+     * @param downloadedList sendMainList() send data retrieved after rotation to presenter
      */
     @Override
     public void sendMainList(List<Person> downloadedList) {
@@ -297,7 +304,11 @@ public class NormalModeActivity extends AppCompatActivity implements View.OnClic
         editor.putInt(getResources().getString(R.string.correct), correctCounter);
         editor.putInt(getResources().getString(R.string.incorrect), incorrectCounter);
         editor.apply();
-        presenter.unregisterListener();
     }
 
+    @Override
+    protected void onDestroy() {
+        presenter.unregisterListener();
+        super.onDestroy();
+    }
 }

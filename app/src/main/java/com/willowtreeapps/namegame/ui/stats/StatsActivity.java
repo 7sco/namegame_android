@@ -11,7 +11,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class StatsActivity extends AppCompatActivity {
-
     @BindView(R.id.correct_num)
     TextView correctNum;
     @BindView(R.id.incorrect_num)
@@ -40,7 +39,6 @@ public class StatsActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-
         outState.putString(getResources().getString(R.string.correct), correctNum.getText().toString());
         outState.putString(getResources().getString(R.string.incorrect), incorrectNum.getText().toString());
         outState.putString(getResources().getString(R.string.average), averageNum.getText().toString());

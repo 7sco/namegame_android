@@ -2,7 +2,6 @@ package com.willowtreeapps.namegame.network.api;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.willowtreeapps.namegame.network.api.model.Person;
 
@@ -31,7 +30,7 @@ public class ProfilesRepository {
         load();
     }
 
-    public void load() {
+    private void load() {
         this.api.getProfiles().enqueue(new Callback<List<Person>>() {
             @Override
             public void onResponse(Call<List<Person>> call, Response<List<Person>> response) {
@@ -41,10 +40,8 @@ public class ProfilesRepository {
                     listener.onLoadFinished(listPerson);
                 }
             }
-
             @Override
             public void onFailure(Call<List<Person>> call, Throwable t) {
-                Log.d("Test", "onResponse: "+t.getMessage());
                 for (Listener listener : listeners) {
                     listener.onError(t);
                 }

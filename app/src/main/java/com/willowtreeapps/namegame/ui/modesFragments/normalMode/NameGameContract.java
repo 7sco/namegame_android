@@ -44,6 +44,4 @@ public interface NameGameContract {
 
         void getAllData();
     }
-
-
 }

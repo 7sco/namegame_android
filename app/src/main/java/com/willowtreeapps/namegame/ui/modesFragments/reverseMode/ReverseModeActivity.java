@@ -1,6 +1,9 @@
 package com.willowtreeapps.namegame.ui.modesFragments.reverseMode;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -37,7 +40,6 @@ import butterknife.OnClick;
 public class ReverseModeActivity extends AppCompatActivity implements View.OnClickListener, ReverseModeContract.ViewContract {
 
     private static final Interpolator OVERSHOOT = new OvershootInterpolator();
-    private static final String TAG = ReverseModeActivity.class.getSimpleName();
 
     @Inject
     ListRandomize listRandomize;
@@ -45,19 +47,21 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
     Picasso picasso;
     @Inject
     ProfilesRepository profilesRepository;
-    @BindView(R.id.playAgain)
+    @BindView(R.id.play_again_btn)
     Button playAgainButton;
+    @BindView(R.id.reload_btn)
+    Button reloadBtn;
 
-    private ReverseModePresenter presenter;
     private ImageView imageOne;
-    private List<TextView> names = new ArrayList<>(5);
     private ViewGroup container;
-    private SharedPreferences prefs;
-    private int correctCounter = 0;
-    private int incorrectCounter = 0;
+    private List<TextView> names = new ArrayList<>(5);
     private List<Person> randomList;
     private List<Person> downloadedList;
+    private ReverseModePresenter presenter;
     private Person randomPerson;
+    private int correctCounter = 0;
+    private int incorrectCounter = 0;
+    private boolean connected;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +72,7 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
         setViews();
         presenter = new ReverseModePresenter(this, listRandomize, profilesRepository);
         prefsUpdateStats();
+        networkStatus();
         manageRotation(savedInstanceState);
     }
 
@@ -84,7 +89,7 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
      * @param savedInstanceState manageRotation() checks savedInstanceState to use data saved after rotation
      */
     private void manageRotation(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
+        if (savedInstanceState != null && connected) {
             randomList = (ArrayList<Person>) savedInstanceState.getSerializable("randomList");
             downloadedList = (ArrayList<Person>) savedInstanceState.getSerializable("downloadedList");
             randomPerson = (Person) savedInstanceState.getSerializable("randomPerson");
@@ -95,15 +100,21 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
             presenter.loadSavedPerson(randomPerson);
             setNames(randomList);
         } else {
-            getData();
+            getDataOnConnection();
         }
+    }
+
+    private void networkStatus() {
+        ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo nInfo = cm.getActiveNetworkInfo();
+        connected = nInfo != null && nInfo.isAvailable() && nInfo.isConnected();
     }
 
     /**
      * Set views at creation of activity
      */
     private void setViews() {
-        imageOne = findViewById(R.id.imagePerson);
+        imageOne = findViewById(R.id.image_one);
         container = findViewById(R.id.face_container);
         playAgainButton.setVisibility(View.INVISIBLE);
     }
@@ -112,7 +123,7 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
      * prefsUpdateStats() get correct & incorrect count from sharedPreferences to be updated
      */
     private void prefsUpdateStats() {
-        prefs = this.getSharedPreferences(getResources().getString(R.string.sharedP), MODE_PRIVATE);
+        SharedPreferences prefs = this.getSharedPreferences(getResources().getString(R.string.sharedP), MODE_PRIVATE);
         correctCounter = prefs.getInt(getResources().getString(R.string.correct), 0);
         incorrectCounter = prefs.getInt(getResources().getString(R.string.incorrect), 0);
     }
@@ -123,6 +134,17 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
     private void getData() {
         hideViews();
         presenter.getData();
+    }
+
+    private void getDataOnConnection() {
+        networkStatus();
+        if (connected) {
+            reloadBtn.setVisibility(View.GONE);
+            getData();
+        } else {
+            reloadBtn.setVisibility(View.VISIBLE);
+            Toast.makeText(this, getResources().getString(R.string.network_fail), Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -147,6 +169,23 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
             face.animate().scaleX(0).scaleY(0).setStartDelay(50 * i).setInterpolator(OVERSHOOT).start();
         }
         showPlayAgainButton();
+    }
+
+    /**
+     * hideViews() Hide all views before getting data so no dummy data is shown
+     */
+    private void hideViews() {
+        //Hide the views until data loads
+        //imageOne.setAlpha(0);
+        int n = container.getChildCount();
+        for (int i = 0; i < n; i++) {
+            TextView name = (TextView) container.getChildAt(i);
+            name.setOnClickListener(this);
+            names.add(name);
+            //Hide the views until data loads
+            name.setScaleX(0);
+            name.setScaleY(0);
+        }
     }
 
     /**
@@ -184,10 +223,17 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
         playAgainButton.setVisibility(View.VISIBLE);
     }
 
-    @OnClick(R.id.playAgain)
-    public void onViewClicked() {
-        presenter.reShuffle();
-        playAgainButton.setVisibility(View.INVISIBLE);
+    @OnClick({R.id.reload_btn, R.id.play_again_btn})
+    public void onViewClicked(View view) {
+        switch (view.getId()) {
+            case R.id.reload_btn:
+                getDataOnConnection();
+                break;
+            case R.id.play_again_btn:
+                presenter.reShuffle();
+                playAgainButton.setVisibility(View.INVISIBLE);
+                break;
+        }
     }
 
     @Override
@@ -210,9 +256,7 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
     }
 
     /**
-     *
-     * @param randomList
-     * sendRandomList() send data retrieved after rotation to presenter
+     * @param randomList sendRandomList() send data retrieved after rotation to presenter
      */
     @Override
     public void sendRandomList(List<Person> randomList) {
@@ -220,41 +264,19 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
     }
 
     /**
-     *
-     * @param randomPerson
-     *  sendRandomPerson() send data retrieved after rotation to presenter
+     * @param randomPerson sendRandomPerson() send data retrieved after rotation to presenter
      */
     @Override
     public void sendRandomPerson(Person randomPerson) {
-        Log.d("Test1", "sendRandomPerson: Person" + randomPerson.getFirstName());
         this.randomPerson = randomPerson;
     }
 
     /**
-     *
-     * @param downloadedList
-     * sendMainList() send data retrieved after rotation to presenter
+     * @param downloadedList sendMainList() send data retrieved after rotation to presenter
      */
     @Override
     public void sendMainList(List<Person> downloadedList) {
         this.downloadedList = downloadedList;
-    }
-
-    /**
-     * hideViews() Hide all views before getting data so no dummy data is shown
-     */
-    private void hideViews() {
-        //Hide the views until data loads
-        //imageOne.setAlpha(0);
-        int n = container.getChildCount();
-        for (int i = 0; i < n; i++) {
-            TextView name = (TextView) container.getChildAt(i);
-            name.setOnClickListener(this);
-            names.add(name);
-            //Hide the views until data loads
-            name.setScaleX(0);
-            name.setScaleY(0);
-        }
     }
 
     @Override
@@ -266,11 +288,15 @@ public class ReverseModeActivity extends AppCompatActivity implements View.OnCli
     @Override
     protected void onStop() {
         super.onStop();
-        presenter.unregisterListener();
         SharedPreferences.Editor editor = this.getSharedPreferences(getResources().getString(R.string.sharedP), MODE_PRIVATE).edit();
         editor.putInt(getResources().getString(R.string.correct), correctCounter);
         editor.putInt(getResources().getString(R.string.incorrect), incorrectCounter);
         editor.apply();
+    }
+
+    @Override
+    protected void onDestroy() {
         presenter.unregisterListener();
+        super.onDestroy();
     }
 }

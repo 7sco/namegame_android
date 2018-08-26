@@ -38,6 +38,7 @@ public class NameGamePresenter implements NameGameContract.Presenter {
     @Override
     public void getData() {
         setListener();
+        //profilesRepository.load();
         profilesRepository.register(listener);
     }
 
@@ -67,7 +68,6 @@ public class NameGamePresenter implements NameGameContract.Presenter {
                 downloadedList=people;
                 randomizeData();
             }
-
             @Override
             public void onError(@NonNull Throwable error) {
                 viewImpl.showToast("Error");
@@ -213,5 +213,4 @@ public class NameGamePresenter implements NameGameContract.Presenter {
         viewImpl.sendRandomList(randomList);
         viewImpl.sendMainList(downloadedList);
     }
-
 }

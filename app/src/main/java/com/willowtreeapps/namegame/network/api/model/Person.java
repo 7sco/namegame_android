@@ -32,6 +32,23 @@ public class Person implements Serializable {
     @SerializedName("id")
     private String id;
 
+
+    public Person(String id,
+                  String type,
+                  String slug,
+                  String jobTitle,
+                  String firstName,
+                  String lastName,
+                  Headshot headshot) {
+        this.id = id;
+        this.type = type;
+        this.slug = slug;
+        this.jobTitle = jobTitle;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.headshot = headshot;
+    }
+
     public String getBio() {
         return bio;
     }

@@ -43,7 +43,6 @@ public class NameGameActivity extends AppCompatActivity {
     public void onViewClicked(View view) {
         Intent i= null;
         SharedPreferences.Editor editor = getSharedPreferences(getResources().getString(R.string.sharedP), MODE_PRIVATE).edit();
-
         switch (view.getId()) {
             case R.id.normal_game:
                 i = new Intent(this, NormalModeActivity.class);
@@ -63,7 +62,6 @@ public class NameGameActivity extends AppCompatActivity {
         editor.apply();
         startActivity(i);
     }
-
 
     @Override
     public void onBackPressed() {

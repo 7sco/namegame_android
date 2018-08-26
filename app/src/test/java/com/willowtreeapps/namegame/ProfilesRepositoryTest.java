@@ -31,9 +31,9 @@ public class ProfilesRepositoryTest {
 
     static {
         List<Person> people = new ArrayList<>();
-        people.add(new Person("1", null, null, null, "Bill", "Smith", null, null));
-        people.add(new Person("2", null, null, null, "Pam", "White", null, null));
-        people.add(new Person("3", null, null, null, "Fred", "Doe", null, null));
+        people.add(new Person("1", null, null, null, "Bill", "Smith", null));
+        people.add(new Person("2", null, null, null, "Pam", "White", null));
+        people.add(new Person("3", null, null, null, "Fred", "Doe", null));
         PROFILES = new Profiles(people, null);
     }
 

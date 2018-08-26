@@ -8,7 +8,7 @@
     android:orientation="vertical">
 
     <Button
-        android:id="@+id/playAgain"
+        android:id="@+id/play_again_btn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -23,8 +23,25 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <Button
+        android:id="@+id/reload_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/reload"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
-        android:id="@+id/title"
+        android:id="@+id/person_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/name_game_title_text_margin"
@@ -54,38 +71,38 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/title">
+        app:layout_constraintTop_toBottomOf="@+id/person_name">
 
         <ImageView
-            android:id="@+id/imagePerson"
+            android:id="@+id/image_one"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:contentDescription="@string/cdFace"
-            app:layout_constraintBottom_toTopOf="@+id/imageFour"
-            app:layout_constraintEnd_toStartOf="@+id/imageTwo"
+            app:layout_constraintBottom_toTopOf="@+id/image_four"
+            app:layout_constraintEnd_toStartOf="@+id/image_two"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0" />
 
         <ImageView
-            android:id="@+id/imageTwo"
+            android:id="@+id/image_two"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:contentDescription="@string/cdFace"
-            app:layout_constraintBottom_toTopOf="@+id/imageFive"
-            app:layout_constraintEnd_toStartOf="@+id/imageThree"
+            app:layout_constraintBottom_toTopOf="@+id/image_five"
+            app:layout_constraintEnd_toStartOf="@+id/image_three"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/imagePerson"
+            app:layout_constraintStart_toEndOf="@+id/image_one"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="1.0" />
 
         <ImageView
-            android:id="@+id/imageThree"
+            android:id="@+id/image_three"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
@@ -93,41 +110,41 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:contentDescription="@string/cdFace"
-            app:layout_constraintBottom_toTopOf="@+id/imageSix"
+            app:layout_constraintBottom_toTopOf="@+id/image_six"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/imageTwo"
+            app:layout_constraintStart_toEndOf="@+id/image_two"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="1.0" />
 
         <ImageView
-            android:id="@+id/imageFour"
+            android:id="@+id/image_four"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:contentDescription="@string/cdFace"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/imageFive"
+            app:layout_constraintEnd_toStartOf="@+id/image_five"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imagePerson" />
+            app:layout_constraintTop_toBottomOf="@+id/image_one" />
 
         <ImageView
-            android:id="@+id/imageFive"
+            android:id="@+id/image_five"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:contentDescription="@string/cdFace"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/imageSix"
+            app:layout_constraintEnd_toStartOf="@+id/image_six"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/imageFour"
-            app:layout_constraintTop_toBottomOf="@+id/imageTwo" />
+            app:layout_constraintStart_toEndOf="@+id/image_four"
+            app:layout_constraintTop_toBottomOf="@+id/image_two" />
 
         <ImageView
-            android:id="@+id/imageSix"
+            android:id="@+id/image_six"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -136,8 +153,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/imageFive"
-            app:layout_constraintTop_toBottomOf="@+id/imageThree" />
+            app:layout_constraintStart_toEndOf="@+id/image_five"
+            app:layout_constraintTop_toBottomOf="@+id/image_three" />
 
     </android.support.constraint.ConstraintLayout>
 

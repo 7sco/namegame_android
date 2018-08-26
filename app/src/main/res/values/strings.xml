@@ -2,9 +2,6 @@
     <string name="app_name">Name Game</string>
     <string name="question">Who is %s?</string>
     <string name="cdFace">A face</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="modes_txt">MODES</string>
     <string name="normal_mode_txt">NORMAL MODE</string>
     <string name="mat_mode_txt">MAT MODE</string>
@@ -29,4 +26,6 @@
     <string name="http">http://</string>
     <string name="linkImage">http://grupsapp.com/wp-content/uploads/2016/04/willowtreeapps.png</string>
     <string name="network_fail">Connect to Network</string>
+    <string name="play_again">Play Again</string>
+    <string name="reload">RELOAD</string>
 </resources>
